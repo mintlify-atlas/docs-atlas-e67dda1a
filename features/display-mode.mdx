@@ -1,0 +1,546 @@
+---
+title: 'Display Mode'
+description: 'Full-screen promotional display engine with animations and auto-rotation'
+icon: 'tv'
+---
+
+## Overview
+
+Display Mode is PromoMaster Pro's full-screen promotional display engine. It transforms your playlists into stunning, professionally animated digital signage that cycles through products and announcements with cinematic effects, dynamic theming, and smooth transitions.
+
+<Info>
+Display Mode is optimized for large screens, TVs, and digital signage displays. It runs in fullscreen mode with no UI chrome or distractions.
+</Info>
+
+## Entering Display Mode
+
+Launch Display Mode from the Dashboard:
+
+1. Build a playlist in **Panel de Control**
+2. Select your target store
+3. Set slide duration
+4. Click **Iniciar Transmisión**
+
+Or use **Quick Launch** to display a single item immediately.
+
+## Display Interface Components
+
+Display Mode includes several key interface elements:
+
+### Progress Bar
+
+A dynamic progress indicator at the top of the screen:
+
+```tsx AdDisplay.tsx:96-104
+{items.length > 1 && (
+  <div className="absolute top-0 left-0 w-full h-1.5 bg-white/5 z-[150]">
+    <div 
+      className="h-full transition-all duration-100 ease-linear shadow-[0_0_15px_rgba(255,255,255,0.3)]" 
+      style={{ width: `${progress}%`, backgroundColor: themeColor }}
+    ></div>
+  </div>
+)}
+```
+
+- Shows time remaining on current slide
+- Color-coded to match the current item's theme
+- Only visible when playlist has multiple items
+
+### Exit Button
+
+Return to Dashboard at any time:
+
+```tsx AdDisplay.tsx:112-120
+<div className="absolute top-6 right-6 z-[160]">
+  <button 
+    onClick={onExit} 
+    className="p-4 bg-rose-600/80 hover:bg-rose-500 text-white rounded-xl transition-all shadow-2xl backdrop-blur-md border border-white/10 active:scale-90 group"
+  >
+    <X size={24} className="group-hover:rotate-90 transition-transform duration-300" />
+  </button>
+</div>
+```
+
+<Warning>
+Press the red X button in the top-right corner to exit. There is no keyboard shortcut to prevent accidental exits.
+</Warning>
+
+### Slide Indicators
+
+Dots at the bottom show current position in multi-item playlists:
+
+```tsx AdDisplay.tsx:243-260
+{items.length > 1 && (
+  <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex gap-3 z-[130]">
+    {items.map((_, i) => (
+      <div 
+        key={i} 
+        className={`h-2 transition-all duration-700 rounded-full cursor-pointer 
+                   ${i === currentIndex ? 'w-12 bg-white' : 'w-2 bg-white/10 hover:bg-white/30'}`} 
+        style={{ backgroundColor: i === currentIndex ? themeColor : undefined }}
+        onClick={() => {
+          setCurrentIndex(i);
+          setProgress(0);
+          setShowContent(false);
+          setTimeout(() => setShowContent(true), 100);
+        }}
+      ></div>
+    ))}
+  </div>
+)}
+```
+
+- Click any dot to jump to that slide
+- Current slide is highlighted and elongated
+- Uses theme color of current item
+
+### Ticker Tape
+
+Animated bottom ticker with contextual messages:
+
+```tsx AdDisplay.tsx:227-241
+<div className="absolute bottom-4 left-0 w-full bg-black/40 backdrop-blur-md border-y border-white/5 py-4 overflow-hidden whitespace-nowrap z-[140]">
+  <div className="flex animate-marquee space-x-20 px-10 items-center">
+    {[...Array(6)].map((_, i) => (
+      <React.Fragment key={i}>
+        {tickerMessages.map((msg, idx) => (
+          <span key={`${i}-${idx}`} className={`font-bebas text-3xl xl:text-4xl tracking-[0.15em] flex items-center gap-6 
+                                                 ${idx % 2 === 0 ? 'text-white/90' : ''}`} 
+                style={{ color: idx % 2 !== 0 ? themeColor : undefined }}>
+            {msg}
+            <div className="w-2 h-2 rounded-full bg-white/20"></div>
+          </span>
+        ))}
+      </React.Fragment>
+    ))}
+  </div>
+</div>
+```
+
+Ticker content is dynamically generated based on item type:
+
+```tsx AdDisplay.tsx:34-59
+const tickerMessages = useMemo(() => {
+  if (isProduct && product) {
+    const messages = [
+      product.name.toUpperCase(),
+      "CALIDAD GARANTIZADA",
+      "DISPONIBLE AHORA",
+      store.name.toUpperCase()
+    ];
+    if (product.isPromotion) {
+      messages.push("¡OFERTA LIMITADA!");
+      messages.push(`MEJOR PRECIO: $${product.price.toLocaleString()}`);
+    }
+    if (product.category?.toLowerCase().includes('carne')) {
+      messages.push("CALIDAD PREMIUM SELECCIONADA");
+    }
+    return messages;
+  } else if (announcement) {
+    return [
+      announcement.title.toUpperCase(),
+      "AVISO IMPORTANTE",
+      store.name.toUpperCase(),
+      "¡GRACIAS POR SU VISITA!"
+    ];
+  }
+  return [];
+}, [currentItem, store.name, isProduct, product, announcement]);
+```
+
+## Product Display Layout
+
+Products render as split-screen layouts with image and content:
+
+```tsx AdDisplay.tsx:149-224
+{isProduct && product && (
+  <div className={`w-100dvh max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-10 xl:gap-24 transition-all duration-[800ms] ease-out transform 
+                  ${showContent ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'}`}>
+    
+    {/* Image Container */}
+    <div className="relative flex-shrink-0 group perspective-1000">
+      <div className="absolute inset-0 blur-[120px] scale-90 opacity-40 transition-all duration-1000" style={{ backgroundColor: themeColor }}></div>
+      <div className="relative w-72 h-72 md:w-[28rem] md:h-[28rem] xl:w-[32rem] xl:h-[32rem] rounded-[3.5rem] overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.7)] border-[4px] border-white/10 shine-effect bg-slate-900 ring-1 ring-white/5">
+        <img src={product.imageUrl || `https://picsum.photos/seed/${product.id}/1200`} className="w-full h-full object-cover animate-softZoom transition-transform duration-700" alt={product.name} />
+        
+        {product.isPromotion && (
+          <div className="absolute top-6 left-6 text-white font-bebas text-4xl xl:text-5xl px-8 py-3 rounded-[1.5rem] shadow-2xl transform -rotate-3 animate-pulse whitespace-nowrap z-20 ring-2 ring-white/10" 
+               style={{ backgroundColor: themeColor }}>
+            {getPromoLabel(product.promotionType)}
+          </div>
+        )}
+      </div>
+    </div>
+
+    {/* Content Side */}
+    <div className="flex flex-col space-y-8 text-white text-center lg:text-left">
+      <header className="space-y-4">
+        <div className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-xs font-black uppercase tracking-[0.2em] border border-white/10 shadow-lg mx-auto lg:mx-0" 
+             style={{ backgroundColor: `${themeColor}22`, color: themeColor }}>
+          <Zap size={16} fill="currentColor" />
+          {store.name}
+        </div>
+        
+        <h1 className="text-7xl md:text-7xl xl:text-[6rem] font-bebas tracking-wider leading-[0.85] drop-shadow-2xl">
+          {product.name}
+        </h1>
+        
+        {product.slogan && (
+          <div className="relative inline-block mt-2">
+            <p className="text-3xl xl:text-4xl font-black italic tracking-tight leading-tight opacity-90" style={{ color: themeColor }}>
+              "{product.slogan}"
+            </p>
+          </div>
+        )}
+      </header>
+
+      <div className="flex flex-col gap-2">
+        <div className="text-slate-500 text-sm font-black uppercase tracking-[0.3em] flex items-center justify-center lg:justify-start gap-3">
+          <div className="hidden lg:block w-8 h-0.5 bg-slate-800"></div>
+          Precio por {product.unit}
+        </div>
+        <div className="flex items-baseline justify-center lg:justify-start gap-4">
+          <span className="text-[10rem] xl:text-[12rem] font-bebas text-white leading-[0.8] tracking-tighter drop-shadow-2xl">
+            <span className="text-5xl xl:text-7xl align-top mt-8 inline-block mr-2" style={{ color: themeColor }}>$</span>
+            {product.price.toLocaleString()}
+          </span>
+          <span className="text-3xl xl:text-4xl font-black text-slate-600 uppercase">/ {product.unit}</span>
+        </div>
+      </div>
+
+      <div className="pt-6 flex flex-col gap-6 w-full lg:w-[110%]">
+        <div className="p-8 bg-white/5 border border-white/5 rounded-[2.5rem] backdrop-blur-xl flex items-center justify-between shadow-2xl group transition-all hover:bg-white/[0.08]">
+          <div className="text-left">
+            <div className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-1 flex items-center gap-2">
+              <Star size={12} fill="currentColor" className="text-amber-500" />
+              UBICACIÓN
+            </div>
+            <div className="text-xl xl:text-2xl font-black tracking-tight">{store.address}</div>
+          </div>
+          <div className="p-5 rounded-2xl shadow-xl transition-all duration-500 group-hover:scale-110 flex items-center justify-center" style={{ backgroundColor: themeColor }}>
+            <ChevronRight size={32} strokeWidth={3} />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+```
+
+### Product Display Features
+
+<CardGroup cols={2}>
+  <Card title="Dynamic Theming" icon="palette">
+    Each product's `primaryColor` controls all accent colors, glows, and highlights throughout the display.
+  </Card>
+  
+  <Card title="Animated Image" icon="sparkles">
+    Product images feature a subtle zoom animation for dynamic, premium feel.
+  </Card>
+  
+  <Card title="Promotion Badges" icon="tag">
+    Promotional products show animated badges with rotated styling and pulsing effects.
+  </Card>
+  
+  <Card title="Massive Typography" icon="text-size">
+    Price displays at 10-12rem size for maximum visibility from a distance.
+  </Card>
+</CardGroup>
+
+## Announcement Display Layout
+
+Announcements render as centered, full-width text displays:
+
+```tsx AdDisplay.tsx:125-147
+{!isProduct && announcement && (
+  <div className={`w-full max-w-6xl h-fit p-16 md:p-24 rounded-[4rem] border border-white/10 shadow-3xl backdrop-blur-xl transition-all duration-1000 transform 
+                  ${showContent ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`} 
+       style={{ backgroundColor: `${announcement.backgroundColor}DD` }}>
+    <div className="flex flex-col items-center justify-center relative">
+      {announcement.hasAnimation && <div className="absolute inset-0 bg-white/5 opacity-10 shine-effect pointer-events-none"></div>}
+      
+      <div className="mb-12 inline-flex items-center gap-6 bg-white/10 px-10 py-4 rounded-[2rem] border border-white/10 shadow-2xl">
+        <Megaphone className="text-white animate-bounce" size={40} />
+        <span className="text-2xl font-black text-white tracking-[0.4em] uppercase">{store.name}</span>
+      </div>
+
+      <div 
+        className={`${announcement.fontFamily} w-full leading-[1.05] drop-shadow-[0_15px_30px_rgba(0,0,0,0.6)]`}
+        style={{ 
+          fontSize: `${announcement.fontSize}px`, 
+          color: announcement.textColor,
+          textAlign: announcement.textAlign
+        }}
+      >
+        {announcement.message}
+      </div>
+    </div>
+  </div>
+)}
+```
+
+### Announcement Features
+
+- **Store Badge**: Animated megaphone icon with store name
+- **Full Typography Control**: Respects all settings from Announcement editor
+- **Shine Effect**: Optional animated overlay for premium feel
+- **Backdrop Blur**: Semi-transparent background with blur effect
+
+## Auto-Rotation System
+
+Display Mode automatically cycles through playlist items:
+
+```tsx AdDisplay.tsx:75-92
+useEffect(() => {
+  if (items.length <= 1) return;
+
+  const interval = 100;
+  const totalSteps = (duration * 1000) / interval;
+  
+  const timer = setInterval(() => {
+    setProgress((prev) => {
+      if (prev >= 100) {
+        nextSlide();
+        return 0;
+      }
+      return prev + (100 / totalSteps);
+    });
+  }, interval);
+
+  return () => clearInterval(timer);
+}, [duration, items.length, nextSlide]);
+```
+
+Transitions include fade and scale effects:
+
+```tsx AdDisplay.tsx:61-68
+const nextSlide = useCallback(() => {
+  setShowContent(false);
+  setTimeout(() => {
+    setCurrentIndex((prev) => (prev + 1) % items.length);
+    setProgress(0);
+    setShowContent(true);
+  }, 500);
+}, [items.length]);
+```
+
+<Accordion title="Rotation Behavior">
+- Playlists with 1 item: No rotation, static display
+- Playlists with 2+ items: Automatic rotation based on duration setting
+- Smooth 500ms transition between slides
+- Infinite loop (returns to first item after last)
+</Accordion>
+
+## Background Effects
+
+Dynamic background gradients adapt to each item's theme:
+
+```tsx AdDisplay.tsx:106-110
+<div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none">
+  <div className="absolute top-[-15%] left-[-10%] w-[50%] h-[50%] blur-[200px] rounded-full animate-pulse transition-all duration-1000" style={{ backgroundColor: themeColor }}></div>
+  <div className="absolute bottom-[-15%] right-[-10%] w-[35%] h-[35%] blur-[160px] rounded-full animate-pulse transition-all duration-1000 opacity-60" style={{ backgroundColor: themeColor, animationDelay: '1.5s' }}></div>
+</div>
+```
+
+- Two large, blurred circles positioned off-screen
+- Pulsing animation at different speeds
+- Color-matched to current item's theme
+- Creates ambient lighting effect
+
+## Custom Animations
+
+Display Mode includes custom CSS animations:
+
+```tsx AdDisplay.tsx:262-269
+<style>{`
+  @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+  @keyframes softZoom { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+  .animate-softZoom { animation: softZoom 15s ease-in-out infinite; }
+  .animate-marquee { display: flex; width: fit-content; animation: marquee 35s linear infinite; }
+  .font-bebas { font-family: 'Bebas Neue', cursive; }
+  .perspective-1000 { perspective: 1000px; }
+`}</style>
+```
+
+<CardGroup cols={3}>
+  <Card title="Marquee" icon="arrow-right">
+    Ticker tape scrolls horizontally at 35s per full cycle
+  </Card>
+  <Card title="Soft Zoom" icon="magnifying-glass-plus">
+    Product images gently scale in/out over 15s
+  </Card>
+  <Card title="Pulse" icon="circle-dot">
+    Background gradients pulse at different rates
+  </Card>
+</CardGroup>
+
+## Theme Color System
+
+Each item determines the display's theme color:
+
+```tsx AdDisplay.tsx:23
+const themeColor = product ? (product.primaryColor || '#4f46e5') : (announcement?.backgroundColor || '#1e293b');
+```
+
+This color affects:
+- Progress bar
+- Background glows
+- Promotion badges
+- Price currency symbols
+- Slogan text
+- Store badge accent
+- Ticker text (alternating)
+- Slide indicator highlights
+- Location card button
+
+## Promotion Labels
+
+Promotion types display different labels:
+
+```tsx AdDisplay.tsx:25-32
+const getPromoLabel = (type?: string) => {
+  switch (type) {
+    case 'dia': return '¡OFERTA DEL DÍA!';
+    case 'semana': return '¡OFERTA DE LA SEMANA!';
+    case 'general':
+    default: return '¡OFERTA IMPERDIBLE!';
+  }
+};
+```
+
+Labels appear as:
+- Rotated, badge-style overlays on product images
+- Large typography (4xl-5xl)
+- Pulsing animation
+- Theme-colored background
+
+## Performance Optimization
+
+Display Mode uses React optimization techniques:
+
+```tsx AdDisplay.tsx:2,34
+import { useEffect, useState, useCallback, useMemo } from 'react';
+
+const tickerMessages = useMemo(() => {
+  // Memoized ticker content generation
+}, [currentItem, store.name, isProduct, product, announcement]);
+
+const nextSlide = useCallback(() => {
+  // Memoized slide transition function
+}, [items.length]);
+```
+
+- `useMemo` prevents unnecessary ticker recalculation
+- `useCallback` stabilizes the nextSlide function
+- Cleanup functions prevent memory leaks from intervals
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Display Hardware">
+    Use displays with:
+    - Minimum 1920x1080 resolution (Full HD)
+    - 16:9 aspect ratio
+    - High brightness (300+ nits for retail)
+    - Good viewing angles (IPS panels recommended)
+  </Accordion>
+  
+  <Accordion title="Content Visibility">
+    Test your display from typical viewing distances:
+    - Counter displays: 3-6 feet
+    - Window displays: 10-20 feet
+    - Overhead displays: 15-30 feet
+    
+    Adjust font sizes and image quality accordingly.
+  </Accordion>
+  
+  <Accordion title="Duration Settings">
+    Match duration to viewer behavior:
+    - High traffic: 3-5 seconds (faster rotation)
+    - Moderate traffic: 5-8 seconds (balanced)
+    - Waiting areas: 8-15 seconds (detailed viewing)
+  </Accordion>
+  
+  <Accordion title="Browser Setup">
+    For permanent installations:
+    - Use Chrome or Edge in kiosk mode
+    - Disable power-saving/sleep modes
+    - Set browser to auto-load PromoMaster on startup
+    - Clear cache periodically
+  </Accordion>
+  
+  <Accordion title="Content Strategy">
+    - Update playlists regularly (daily/weekly)
+    - Use high-quality, high-resolution images
+    - Ensure color contrast for readability
+    - Test all content before deploying to public displays
+  </Accordion>
+</AccordionGroup>
+
+## Kiosk Mode Setup
+
+<Steps>
+  <Step title="Open Chrome">
+    Navigate to PromoMaster Pro and build your playlist.
+  </Step>
+  
+  <Step title="Launch Display Mode">
+    Start your promotional display.
+  </Step>
+  
+  <Step title="Enter Fullscreen">
+    Press F11 (Windows/Linux) or Cmd+Ctrl+F (Mac) to enter native fullscreen.
+  </Step>
+  
+  <Step title="Lock the Browser">
+    Use Chrome's kiosk mode flag: `--kiosk --kiosk-printing`
+  </Step>
+</Steps>
+
+<Note>
+For true kiosk deployments, consider using Chrome OS devices or dedicated kiosk software that prevents users from exiting the browser.
+</Note>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Display Won't Launch">
+    - Ensure playlist has at least one item
+    - Verify a store is selected
+    - Check that products/announcements still exist (not deleted)
+    - Try Quick Launch on a single item to isolate the issue
+  </Accordion>
+  
+  <Accordion title="Images Not Showing">
+    - Verify image URLs are accessible
+    - Check uploaded images didn't exceed browser storage limits
+    - Try re-uploading or using a different image source method
+  </Accordion>
+  
+  <Accordion title="Slow Transitions">
+    - Reduce image file sizes
+    - Clear browser cache
+    - Use URL-based images instead of uploads
+    - Close other browser tabs
+  </Accordion>
+  
+  <Accordion title="Ticker Not Scrolling">
+    - Verify CSS animations are enabled
+    - Check for browser compatibility (modern browsers only)
+    - Refresh the page
+  </Accordion>
+</AccordionGroup>
+
+## Related Features
+
+<CardGroup cols={3}>
+  <Card title="Playlist Creation" icon="list" href="/features/playlist-creation">
+    Build sequences for display
+  </Card>
+  <Card title="Product Management" icon="box" href="/features/product-management">
+    Configure product themes
+  </Card>
+  <Card title="Announcements" icon="megaphone" href="/features/announcements">
+    Design text slides
+  </Card>
+</CardGroup>

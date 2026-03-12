@@ -1,0 +1,168 @@
+---
+title: 'Store Management'
+description: 'Create and manage multiple store locations for your digital signage network'
+icon: 'store'
+---
+
+## Overview
+
+The Store Management feature allows you to create and manage multiple retail locations in your PromoMaster Pro network. Each store has its own profile with customized branding, and you can target specific promotions to individual locations.
+
+<Info>
+Stores are essential for multi-location businesses. Each display session must be associated with a specific store to show location-relevant information.
+</Info>
+
+## Accessing Store Management
+
+Navigate to **Gestión Total** (Management) from the sidebar, then select the **Sucursales** (Stores) tab.
+
+<Tip>
+The Stores tab displays your existing stores on the right side and the creation form on the left side.
+</Tip>
+
+## Creating a New Store
+
+<Steps>
+  <Step title="Open the Store Form">
+    In the Stores tab, locate the **Nuevo Local** (New Store) form on the left side of the screen.
+  </Step>
+  
+  <Step title="Enter Store Details">
+    Fill in the required information:
+    - **Nombre** (Name): The store's display name
+    - **Dirección** (Address): The physical address shown on promotional displays
+  </Step>
+  
+  <Step title="Save the Store">
+    Click **Guardar Local** to create the store. You'll see a success notification confirming the store was added.
+  </Step>
+</Steps>
+
+### Store Data Structure
+
+Each store contains the following properties:
+
+```typescript types.ts
+export interface Store {
+  id: string;
+  name: string;
+  address: string;
+  logoColor: string;
+}
+```
+
+## Store List View
+
+All created stores appear in a grid layout on the right side of the screen. Each store card displays:
+
+- **Logo Badge**: A colored square with the store's first initial
+- **Store Name**: Bold display name
+- **Address**: Full street address
+- **Action Buttons**: Edit and delete options (visible on hover)
+
+<CardGroup cols={2}>
+  <Card title="Edit Store" icon="pen">
+    Click the edit icon to modify store details. The form will populate with existing data.
+  </Card>
+  <Card title="Delete Store" icon="trash">
+    Click the trash icon to permanently remove a store from your network.
+  </Card>
+</CardGroup>
+
+## Using Stores in Display Mode
+
+When launching a promotional display from the Dashboard, you must select which store location the content will be shown at:
+
+1. Navigate to **Panel de Control** (Dashboard)
+2. Use the **Local** dropdown in the top-right to select your target store
+3. Build your playlist and launch the display
+
+<Warning>
+The selected store's name and address will appear on all promotional slides during the display session.
+</Warning>
+
+## Store Information in Displays
+
+Store information appears in multiple places during display mode:
+
+### Product Advertisements
+- Store name badge appears in the top-left corner with a lightning bolt icon
+- Full address is shown in the location card at the bottom of product slides
+
+### Announcement Slides
+- Store name appears in an animated badge at the top center with a megaphone icon
+- Store information is included in the bottom ticker
+
+<Accordion title="Code Reference: Store Display Implementation">
+```tsx AdDisplay.tsx:176-220
+<div className="flex items-center gap-2.5 px-5 py-2 rounded-full text-xs font-black uppercase tracking-[0.2em] border border-white/10 shadow-lg mx-auto lg:mx-0" 
+     style={{ backgroundColor: `${themeColor}22`, color: themeColor }}>
+  <Zap size={16} fill="currentColor" />
+  {store.name}
+</div>
+
+{/* Location card with address */}
+<div className="p-8 bg-white/5 border border-white/5 rounded-[2.5rem] backdrop-blur-xl flex items-center justify-between shadow-2xl group transition-all hover:bg-white/[0.08]">
+  <div className="text-left">
+    <div className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-1 flex items-center gap-2">
+      <Star size={12} fill="currentColor" className="text-amber-500" />
+      UBICACIÓN
+    </div>
+    <div className="text-xl xl:text-2xl font-black tracking-tight">{store.address}</div>
+  </div>
+</div>
+```
+</Accordion>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use Descriptive Store Names">
+    Choose names that clearly identify each location, especially if you have multiple stores in the same city (e.g., "Central Mall Store" vs "Downtown Store").
+  </Accordion>
+  
+  <Accordion title="Keep Addresses Concise">
+    Use short, readable addresses. Remember they'll be displayed on digital signage screens: "Av. Libertador 1234" works better than "Avenida Libertador 1234, Piso 2, Local 5".
+  </Accordion>
+  
+  <Accordion title="Create Stores Before Products">
+    Set up your store network first. You'll need at least one store before you can launch any promotional displays.
+  </Accordion>
+</AccordionGroup>
+
+## Default Store
+
+PromoMaster Pro creates a default store on first launch:
+
+```typescript App.tsx:33-35
+stores: [
+  { id: '1', name: 'Sucursal Central', address: 'Av. Libertador 1234', logoColor: 'bg-blue-600' }
+]
+```
+
+You can edit or delete this default store and create your own custom locations.
+
+## Data Persistence
+
+All store data is automatically saved to browser localStorage and persists across sessions:
+
+```typescript App.tsx:45-47
+useEffect(() => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}, [state]);
+```
+
+<Note>
+Store data is stored locally in your browser. Clearing browser data will remove all stores.
+</Note>
+
+## Related Features
+
+<CardGroup cols={2}>
+  <Card title="Dashboard" icon="grid" href="/quickstart">
+    Select stores when creating playlists
+  </Card>
+  <Card title="Display Mode" icon="tv" href="/features/display-mode">
+    See how store info appears on screens
+  </Card>
+</CardGroup>

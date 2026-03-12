@@ -1,0 +1,374 @@
+---
+title: 'Announcements'
+description: 'Create custom text-based announcements with full typographic control'
+icon: 'megaphone'
+---
+
+## Overview
+
+Announcements (Avisos Libres) are custom text-based slides that display important messages, store hours, special events, or any information you want to communicate. Unlike product advertisements, announcements give you complete control over typography, colors, alignment, and animation.
+
+<Info>
+Announcements can be mixed with product slides in playlists to create a balanced promotional experience.
+</Info>
+
+## Accessing Announcements
+
+Navigate to **Gestión Total** (Management) from the sidebar, then select the **Avisos Libres** tab.
+
+## Creating a New Announcement
+
+<Steps>
+  <Step title="Enter Internal Title">
+    The title is for internal organization only and doesn't appear on the display. Use descriptive names like "Summer Hours" or "Holiday Closure Notice".
+  </Step>
+  
+  <Step title="Write Your Message">
+    Enter the text that will appear on screen. This is the main content of your announcement.
+  </Step>
+  
+  <Step title="Choose Typography">
+    Select from four font families:
+    - **Impactante (Bebas)**: Bold, attention-grabbing display font
+    - **Limpio (Inter)**: Clean, modern sans-serif
+    - **Elegante (Serif)**: Traditional, formal serif font
+    - **Técnico (Mono)**: Monospace font for technical content
+  </Step>
+  
+  <Step title="Adjust Font Size">
+    Use the slider to set font size from 20px to 200px. Preview updates in real-time.
+  </Step>
+  
+  <Step title="Set Text Alignment">
+    Choose left, center, or right alignment using the alignment buttons.
+  </Step>
+  
+  <Step title="Select Colors">
+    - **Fondo** (Background): The slide background color
+    - **Letra** (Text): The text color
+  </Step>
+  
+  <Step title="Save Announcement">
+    Click **Guardar Aviso** to save your announcement.
+  </Step>
+</Steps>
+
+## Announcement Data Structure
+
+```typescript types.ts
+export interface Announcement {
+  id: string;
+  title: string;
+  message: string;
+  fontSize: number; // in pixels
+  fontFamily: FontType;
+  backgroundColor: string;
+  textColor: string;
+  textAlign: 'left' | 'center' | 'right';
+  hasAnimation: boolean;
+}
+```
+
+## Real-Time Preview
+
+The right panel shows a live preview of your announcement as you build it:
+
+```tsx Management.tsx:360-375
+<div className="bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden group">
+  <div className="absolute top-4 left-4 bg-white/10 px-3 py-1 rounded-full text-[10px] font-black text-white/50 uppercase tracking-widest">Vista Previa Real-Time</div>
+  <div className="aspect-[16/10] flex items-center justify-center rounded-3xl transition-colors duration-500 overflow-hidden relative" 
+       style={{ backgroundColor: annForm.backgroundColor }}>
+    {annForm.hasAnimation && <div className="absolute inset-0 bg-white/5 opacity-20 pointer-events-none shine-effect"></div>}
+    <div 
+      className={`p-10 leading-tight ${annForm.fontFamily} transition-all duration-300 w-full`}
+      style={{ 
+        fontSize: `${annForm.fontSize / 3}px`, 
+        color: annForm.textColor, 
+        textAlign: annForm.textAlign 
+      }}
+    >
+      {annForm.message || 'Tu mensaje aparecerá aquí...'}
+    </div>
+  </div>
+</div>
+```
+
+<Note>
+The preview scales the font size to 1/3 of the actual display size to fit in the editor. The full-size version appears in Display Mode.
+</Note>
+
+## Typography Options
+
+PromoMaster Pro includes four professionally selected font families:
+
+<CardGroup cols={2}>
+  <Card title="Bebas Neue" icon="text">
+    **Best for**: Headlines, price announcements, urgent messages
+    
+    Condensed display font with strong presence. Ideal for promotional content that needs to grab attention.
+  </Card>
+  
+  <Card title="Inter (Sans-Serif)" icon="font">
+    **Best for**: General information, multi-line content, professional messages
+    
+    Highly readable sans-serif font. Perfect for store hours, policy updates, and informational content.
+  </Card>
+  
+  <Card title="Serif" icon="paragraph">
+    **Best for**: Formal announcements, elegant messaging, brand prestige
+    
+    Traditional serif font adds sophistication. Use for upscale branding or formal communications.
+  </Card>
+  
+  <Card title="Monospace" icon="code">
+    **Best for**: Lists, technical information, structured data
+    
+    Fixed-width font for when alignment and structure matter. Great for tabular information.
+  </Card>
+</CardGroup>
+
+## Font Size Guidelines
+
+```tsx Management.tsx:316-321
+<div>
+  <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Tamaño Letra</label>
+  <div className="flex items-center gap-3 mt-2">
+    <input type="range" min="20" max="200" className="flex-1 accent-indigo-600" 
+           value={annForm.fontSize} onChange={e => setAnnForm({...annForm, fontSize: Number(e.target.value)})} />
+    <span className="font-bold text-slate-900 w-12">{annForm.fontSize}px</span>
+  </div>
+</div>
+```
+
+<AccordionGroup>
+  <Accordion title="Short Headlines (1-5 words)">
+    Use **120-200px** for maximum impact. Perfect for "NOW OPEN" or "50% OFF".
+  </Accordion>
+  
+  <Accordion title="Medium Messages (1-2 lines)">
+    Use **64-100px** for readable single or double-line messages like store hours or event announcements.
+  </Accordion>
+  
+  <Accordion title="Long Content (3+ lines)">
+    Use **32-64px** for detailed information, policies, or multi-paragraph content.
+  </Accordion>
+</AccordionGroup>
+
+## Text Alignment
+
+Three alignment options are available:
+
+```tsx Management.tsx:323-333
+<div className="col-span-1">
+  <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Alineación</label>
+  <div className="flex gap-1 mt-2">
+    {(['left', 'center', 'right'] as const).map(align => (
+      <button key={align} type="button" 
+              onClick={() => setAnnForm({...annForm, textAlign: align})} 
+              className={`flex-1 p-2 rounded-lg border transition-all 
+                         ${annForm.textAlign === align ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-400 border-slate-200'}`}>
+        {align === 'left' ? <AlignLeft size={16} /> : align === 'center' ? <AlignCenter size={16} /> : <AlignRight size={16} />}
+      </button>
+    ))}
+  </div>
+</div>
+```
+
+- **Left**: Professional, easy to read for longer content
+- **Center**: Dramatic, attention-grabbing for headlines
+- **Right**: Unique, artistic for creative messaging
+
+## Color Picker
+
+Use the color pickers to set background and text colors:
+
+```tsx Management.tsx:334-342
+<div className="col-span-1">
+  <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Fondo</label>
+  <input type="color" className="w-full h-10 mt-2 p-1 bg-white border border-slate-200 rounded-xl cursor-pointer" 
+         value={annForm.backgroundColor} onChange={e => setAnnForm({...annForm, backgroundColor: e.target.value})} />
+</div>
+<div className="col-span-1">
+  <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Letra</label>
+  <input type="color" className="w-full h-10 mt-2 p-1 bg-white border border-slate-200 rounded-xl cursor-pointer" 
+         value={annForm.textColor} onChange={e => setAnnForm({...annForm, textColor: e.target.value})} />
+</div>
+```
+
+<Warning>
+Ensure sufficient contrast between background and text colors for readability. Dark text on dark backgrounds will be difficult to read from a distance.
+</Warning>
+
+## Default Announcement Settings
+
+```tsx Management.tsx:36-45
+const INITIAL_ANN_STATE: Omit<Announcement, 'id'> = {
+  title: '',
+  message: '',
+  fontSize: 64,
+  fontFamily: 'font-bebas',
+  backgroundColor: '#1e293b',
+  textColor: '#ffffff',
+  textAlign: 'center',
+  hasAnimation: true
+};
+```
+
+## Announcement List
+
+All saved announcements appear below the preview panel:
+
+```tsx Management.tsx:384-403
+<div className="grid grid-cols-1 gap-4">
+  {announcements.map(ann => (
+    <div key={ann.id} className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center justify-between group hover:border-indigo-400 transition-all">
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-bold" 
+             style={{ backgroundColor: ann.backgroundColor }}>
+          <Megaphone size={20} />
+        </div>
+        <div>
+          <h5 className="font-bold text-slate-900">{ann.title}</h5>
+          <p className="text-xs text-slate-400 font-medium">Font: {ann.fontFamily.replace('font-', '')} • {ann.fontSize}px</p>
+        </div>
+      </div>
+      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button onClick={() => handleEditAnn(ann)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg"><Edit2 size={18} /></button>
+        <button onClick={() => onDeleteAnnouncement(ann.id)} className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg"><Trash2 size={18} /></button>
+      </div>
+    </div>
+  ))}
+</div>
+```
+
+Each card shows:
+- A colored badge with the announcement's background color
+- The internal title
+- Typography details (font family and size)
+- Edit and delete buttons (on hover)
+
+## Announcement Display
+
+In Display Mode, announcements render as full-screen text slides:
+
+```tsx AdDisplay.tsx:125-147
+{!isProduct && announcement && (
+  <div className={`w-full max-w-6xl h-fit p-16 md:p-24 rounded-[4rem] border border-white/10 shadow-3xl backdrop-blur-xl transition-all duration-1000 transform 
+                   ${showContent ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`} 
+       style={{ backgroundColor: `${announcement.backgroundColor}DD` }}>
+    <div className="flex flex-col items-center justify-center relative">
+      {announcement.hasAnimation && <div className="absolute inset-0 bg-white/5 opacity-10 shine-effect pointer-events-none"></div>}
+      
+      <div className="mb-12 inline-flex items-center gap-6 bg-white/10 px-10 py-4 rounded-[2rem] border border-white/10 shadow-2xl">
+        <Megaphone className="text-white animate-bounce" size={40} />
+        <span className="text-2xl font-black text-white tracking-[0.4em] uppercase">{store.name}</span>
+      </div>
+
+      <div 
+        className={`${announcement.fontFamily} w-full leading-[1.05] drop-shadow-[0_15px_30px_rgba(0,0,0,0.6)]`}
+        style={{ 
+          fontSize: `${announcement.fontSize}px`, 
+          color: announcement.textColor,
+          textAlign: announcement.textAlign
+        }}
+      >
+        {announcement.message}
+      </div>
+    </div>
+  </div>
+)}
+```
+
+The display includes:
+- Store name badge with animated megaphone icon
+- Your message in full-size typography
+- Optional shine animation effect
+- Smooth transitions between slides
+
+## Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Store Hours" icon="clock">
+    ```
+    HORARIO DE VERANO
+    Lunes a Sábado
+    8:00 AM - 10:00 PM
+    ```
+    Font: Inter Sans, 64px, Center
+  </Card>
+  
+  <Card title="Holiday Closure" icon="calendar-xmark">
+    ```
+    CERRADO
+    25 DE DICIEMBRE
+    ¡Felices Fiestas!
+    ```
+    Font: Bebas, 128px, Center
+  </Card>
+  
+  <Card title="WiFi Information" icon="wifi">
+    ```
+    WiFi Gratis
+    Red: TiendaCentral
+    Clave: bienvenidos2024
+    ```
+    Font: Mono, 48px, Left
+  </Card>
+  
+  <Card title="Special Event" icon="star">
+    ```
+    ¡GRAN INAUGURACIÓN!
+    Este Sábado
+    10% de descuento en todo
+    ```
+    Font: Bebas, 96px, Center
+  </Card>
+</CardGroup>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use Announcements Strategically">
+    Mix 1-2 announcements with 5-10 product slides for optimal balance. Too many announcements can reduce product exposure.
+  </Accordion>
+  
+  <Accordion title="Keep Messages Brief">
+    Digital signage viewers have limited attention spans. Aim for messages that can be read in 3-5 seconds.
+  </Accordion>
+  
+  <Accordion title="High Contrast Colors">
+    Use strong contrast ratios (dark text on light backgrounds or vice versa). Avoid mid-tone combinations.
+  </Accordion>
+  
+  <Accordion title="Test Readability">
+    View your announcements in Display Mode from 10+ feet away. If you can't read it from across the room, increase font size.
+  </Accordion>
+  
+  <Accordion title="Update Regularly">
+    Keep announcements current. Remove outdated event announcements and seasonal messages promptly.
+  </Accordion>
+</AccordionGroup>
+
+## Animation Effects
+
+The `hasAnimation` property (always `true` by default) adds a subtle shine effect:
+
+```tsx AdDisplay.tsx:128
+{announcement.hasAnimation && <div className="absolute inset-0 bg-white/5 opacity-10 shine-effect pointer-events-none"></div>}
+```
+
+This creates a dynamic, premium feel that draws viewer attention.
+
+## Related Features
+
+<CardGroup cols={3}>
+  <Card title="Dashboard" icon="grid" href="/quickstart">
+    Add announcements to playlists
+  </Card>
+  <Card title="Playlist Creation" icon="list" href="/features/playlist-creation">
+    Mix announcements with products
+  </Card>
+  <Card title="Display Mode" icon="tv" href="/features/display-mode">
+    See announcements live
+  </Card>
+</CardGroup>

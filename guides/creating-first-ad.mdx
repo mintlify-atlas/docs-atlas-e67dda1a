@@ -1,0 +1,198 @@
+---
+title: Creating Your First Ad
+description: Complete walkthrough from setup to displaying your first promotional ad
+icon: rocket
+---
+
+# Creating Your First Ad
+
+This guide walks you through creating and displaying your first advertisement in PromoMaster Pro, from initial setup to seeing your content on screen.
+
+<Steps>
+  <Step title="Access the Management Panel">
+    Start by navigating to the **Gestión Total** (Management) section from the sidebar. This is where you'll create and configure all your content.
+
+    The management panel has three tabs:
+    - **Productos** - For product advertisements
+    - **Avisos Libres** - For custom announcements
+    - **Sucursales** - For store locations
+  </Step>
+
+  <Step title="Create Your First Store Location">
+    Before creating ads, you need at least one store location configured.
+
+    1. Click the **Sucursales** tab
+    2. Fill in the store form:
+       - **Nombre**: Your store name (e.g., "Sucursal Central")
+       - **Dirección**: Store address (e.g., "Av. Libertador 1234")
+       - **Logo Color**: Select a brand color for your store
+    3. Click **Guardar Local** to save
+
+    <Note>
+      PromoMaster Pro comes with a default store ("Sucursal Central") already configured. You can edit or create additional stores as needed.
+    </Note>
+  </Step>
+
+  <Step title="Create Your First Product">
+    Now let's create a product advertisement.
+
+    1. Click the **Productos** tab
+    2. In the "Nuevo Producto" form on the left, fill in:
+       - **Nombre**: Product name (e.g., "Carne Premium")
+       - **Precio**: Price in your currency (e.g., 5990)
+       - **Unidad**: Select unit type (unidad, kg, g, litro, pack)
+       - **Categoría**: Product category (e.g., "Carnes")
+
+    <Info>
+      Leave optional fields empty for now. You can add images and slogans later.
+    </Info>
+
+    3. Click **Crear Producto** to save
+
+    Your product will appear in the list on the right side of the screen.
+  </Step>
+
+  <Step title="Add Product Details (Optional)">
+    Enhance your product ad with visual elements:
+
+    ### Adding an Image
+    
+    PromoMaster Pro offers three ways to add product images:
+
+    **URL Method**
+    - Select the **URL** tab under "Imagen del Producto"
+    - Paste the direct URL to your product image
+    - The image will preview once loaded
+
+    **Upload Method**
+    - Select the **Subir** tab
+    - Click **Seleccionar Archivo**
+    - Choose an image from your computer
+    - The image will be embedded in base64 format
+
+    **AI Generation**
+    - Select the **AI** tab
+    - Ensure your product name is filled in
+    - Click **Generar con IA**
+    - Wait for Gemini AI to generate a professional product image
+
+    ### Adding a Slogan
+    
+    - Manually type a slogan in the "Slogan Publicitario" field, OR
+    - Click the sparkle icon (✨) to generate one with AI
+    - The AI will create a compelling marketing slogan based on your product name and description
+
+    ### Setting as Promotion
+    
+    To mark the product as a special offer:
+    1. Check the **ES UNA OFERTA** checkbox
+    2. Select the promotion type:
+       - **Oferta Simple** - General promotion
+       - **Oferta del Día** - Daily special
+       - **Oferta Semanal** - Weekly deal
+  </Step>
+
+  <Step title="Build Your Playlist">
+    Switch to the **Panel de Control** (Dashboard) to create your display sequence.
+
+    1. You'll see three tabs at the top:
+       - **Productos** - Browse your product catalog
+       - **Avisos Libres** - Browse custom announcements
+       - **Mi Secuencia** - Your playlist queue
+
+    2. From the **Productos** tab:
+       - Browse your products in a card grid layout
+       - Click the **+** button on any product card to add it to your sequence
+       - Or hover and click the play icon to preview it immediately
+
+    3. Check your playlist:
+       - Click the **Mi Secuencia** tab (shows a badge with item count)
+       - Your added products appear in a numbered list
+       - Use the up/down arrows to reorder items
+       - Click the X icon to remove items
+
+    <Tip>
+      Click "Añadir Todo a Secuencia" to quickly add all products and announcements to your playlist.
+    </Tip>
+  </Step>
+
+  <Step title="Configure Display Settings">
+    Before launching, configure your display preferences:
+
+    **Display Duration**
+    - At the top of the Dashboard, find the duration control
+    - Adjust the seconds value (default: 5 seconds)
+    - This determines how long each item stays on screen
+
+    **Select Store Location**
+    - Use the "Local" dropdown at the top right
+    - Select which store location to display
+    - The store name and address will appear in your ads
+  </Step>
+
+  <Step title="Launch Your Display">
+    Ready to see your ad in action!
+
+    1. From the **Mi Secuencia** tab, click the **Iniciar Transmisión** button
+    2. Your display will launch in fullscreen mode with:
+       - Smooth transitions between items
+       - Dynamic background effects matching your brand colors
+       - An animated ticker at the bottom
+       - Progress bar at the top showing slide timing
+       - Store information prominently displayed
+
+    **Display Features**:
+    - **Auto-advance**: Items rotate automatically based on your duration setting
+    - **Progress indicator**: Top bar shows time remaining
+    - **Slide dots**: Bottom center shows position in sequence
+    - **Exit button**: Red X in the top right returns to Dashboard
+
+    <Warning>
+      The display runs in fullscreen mode. Press the red X button or press ESC to exit.
+    </Warning>
+  </Step>
+
+  <Step title="Quick Preview Option">
+    Want to preview a single item without building a playlist?
+
+    From the **Productos** or **Avisos Libres** tab:
+    1. Hover over any product or announcement card
+    2. Click the play icon (▶) that appears
+    3. The item displays immediately in fullscreen
+    4. Click the exit button when done
+
+    This is perfect for testing individual items before adding them to your main sequence.
+  </Step>
+</Steps>
+
+## What's Next?
+
+Congratulations! You've created and displayed your first ad. Here's what to explore next:
+
+- [Managing Multiple Stores](/guides/managing-multiple-stores) - Scale to multiple locations
+- [Customizing Display](/guides/customizing-display) - Fine-tune colors, fonts, and animations
+- [Best Practices](/guides/best-practices) - Optimization tips for professional results
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="My product doesn't appear in the Dashboard">
+    Make sure you clicked "Crear Producto" after filling in the form. Check the product list on the right side of the Management panel to confirm it was saved.
+  </Accordion>
+
+  <Accordion title="Display shows blank screen">
+    This happens when:
+    - Your playlist is empty (add items first)
+    - The selected store doesn't exist (check store selection dropdown)
+    - Items were deleted after being added to playlist (rebuild your sequence)
+  </Accordion>
+
+  <Accordion title="AI features not working">
+    AI features (image generation, slogan generation) require:
+    - A valid API key configured in your environment
+    - Active internet connection
+    - Gemini API access enabled
+    
+    Check your `API_KEY` environment variable if AI features fail.
+  </Accordion>
+</AccordionGroup>

@@ -1,0 +1,308 @@
+---
+title: Managing Multiple Stores
+description: Create and manage multiple store locations with PromoMaster Pro
+icon: store
+---
+
+# Managing Multiple Stores
+
+PromoMaster Pro is designed for businesses with multiple locations. This guide shows you how to create, manage, and switch between different store locations.
+
+## Understanding Multi-Store Setup
+
+Each store location in PromoMaster Pro has:
+- **Unique identifier**: Automatically generated ID
+- **Store name**: Display name shown in ads (e.g., "Sucursal Norte")
+- **Address**: Physical location shown in advertisements
+- **Brand color**: Visual identifier using Tailwind CSS color classes
+
+<Info>
+  All products and announcements are shared across stores. Only the store name and address change when switching locations.
+</Info>
+
+## Creating Store Locations
+
+<Steps>
+  <Step title="Navigate to Store Management">
+    1. Open the sidebar and click **Gestión Total**
+    2. Select the **Sucursales** tab
+    3. You'll see the store creation form on the left and existing stores on the right
+  </Step>
+
+  <Step title="Add New Store">
+    Fill in the store form:
+
+    **Nombre** (Required)
+    - Enter the store name as you want it to appear in ads
+    - Examples: "Sucursal Centro", "Local Palermo", "Plaza Norte"
+    - Keep it concise - it appears in the ticker and store badge
+
+    **Dirección** (Required)
+    - Full street address for customer reference
+    - Examples: "Av. Libertador 1234", "Calle Florida 567, Local 3"
+    - This displays prominently in product advertisements
+
+    **Logo Color**
+    - Currently uses Tailwind CSS background classes
+    - Default options include color variations for brand consistency
+    - The first letter of the store name appears on this colored badge
+
+    Click **Guardar Local** to create the store.
+  </Step>
+
+  <Step title="Edit Existing Stores">
+    To modify a store:
+    1. Click the edit icon (pencil) next to any store in the list
+    2. The form populates with current values
+    3. Make your changes
+    4. Click **Guardar Local** again to update
+    
+    The form button will show the store name while editing.
+  </Step>
+
+  <Step title="Delete Stores">
+    To remove a store location:
+    1. Click the trash icon next to the store
+    2. The store is immediately deleted
+    3. A notification confirms deletion
+
+    <Warning>
+      Deleting a store is permanent. If a deleted store is selected in the Dashboard, displays may fail. Always switch to a different store first.
+    </Warning>
+  </Step>
+</Steps>
+
+## Switching Between Stores in Dashboard
+
+The Dashboard lets you quickly switch which store location you're creating displays for.
+
+### Using the Store Selector
+
+1. In the **Panel de Control** (Dashboard), locate the header area
+2. Find the **Local** dropdown in the top right section
+3. Click to see all available stores
+4. Select your desired location
+
+The selected store will be used when you launch displays. Store information (name, address) automatically appears in your advertisements.
+
+<Tip>
+  The store selector remembers your last selection. When you return to the Dashboard, it defaults to the previously selected store.
+</Tip>
+
+## Multi-Store Use Cases
+
+### Scenario 1: Chain Retail Stores
+
+**Setup**:
+- Create one store entry per physical location
+- Use consistent naming: "[Brand] [Location]" (e.g., "FreshMart Centro", "FreshMart Norte")
+- Share the same product catalog across all stores
+
+**Workflow**:
+1. Create products once in Management
+2. Build your base playlist in Dashboard
+3. Switch store location before displaying
+4. Each display automatically shows the correct store name and address
+
+**Benefits**:
+- Single product management across locations
+- Consistent branding and pricing
+- Quick deployment to new stores
+
+### Scenario 2: Franchise Operations
+
+**Setup**:
+- Each franchisee gets their own store entry
+- Different addresses but shared promotional content
+- Centralized product updates
+
+**Workflow**:
+1. Corporate manages product catalog
+2. Franchisees select their store location
+3. Run the same promotions with local store information
+
+**Benefits**:
+- Brand consistency across franchises
+- Local store identity preserved
+- Centralized promotional control
+
+### Scenario 3: Department-Based Displays
+
+**Setup**:
+- Use "stores" to represent different departments in one location
+- Example: "Electronics Dept.", "Fresh Produce", "Bakery"
+- Customize address field for department location (e.g., "Aisle 5, Second Floor")
+
+**Workflow**:
+1. Create department-specific product groups
+2. Build targeted playlists per department
+3. Switch "store" to match department
+4. Display on screens in different areas
+
+**Benefits**:
+- Targeted messaging by department
+- Flexible address field usage
+- Multi-screen support in one location
+
+### Scenario 4: Seasonal or Event Locations
+
+**Setup**:
+- Create temporary store entries for pop-ups or events
+- Example: "Summer Fair Stand", "Holiday Market Booth"
+- Reuse existing products with event-specific location info
+
+**Workflow**:
+1. Create temporary store before event
+2. Use existing promotional content
+3. Delete or deactivate store after event
+
+**Benefits**:
+- Quick setup for temporary locations
+- Reuse product library
+- Easy cleanup post-event
+
+## Best Practices for Multi-Store Management
+
+### Naming Conventions
+
+**Consistent Structure**
+```
+[Brand Name] [Location Type] [Area]
+```
+
+Examples:
+- SuperMart - Sucursal Centro
+- SuperMart - Sucursal Norte  
+- SuperMart - Express Aeropuerto
+
+**Benefits**:
+- Easy identification in dropdown
+- Professional appearance
+- Alphabetical sorting works well
+
+### Address Formatting
+
+**Full Address Format**
+```
+[Street Name] [Number], [Optional Detail]
+[City/Area]
+```
+
+Examples:
+- Av. Libertador 1234, Local 5
+- Calle Florida 567
+- Shopping Plaza Norte, Nivel 2
+
+**Keep It Visible**:
+- Addresses display prominently in ads
+- Ensure accuracy for customer navigation
+- Include landmarks if helpful
+
+### Store Organization
+
+**Start Small**: Begin with 2-3 stores to test workflows
+
+**Scale Gradually**: Add stores as you expand
+
+**Regular Audits**: 
+- Remove closed locations
+- Update addresses if stores relocate
+- Verify store names match physical signage
+
+### Performance Considerations
+
+**Shared Data Model**:
+- All stores share the same products and announcements database
+- No performance impact from adding more stores
+- The store selector is a simple dropdown - instant switching
+
+**Storage**:
+- Store data is minimal (name, address, color)
+- Stores persist in browser localStorage
+- No backend required for multi-store setup
+
+## Technical Details
+
+### Store Data Structure
+
+Each store is stored with this structure:
+
+```typescript
+interface Store {
+  id: string;              // Auto-generated UUID
+  name: string;            // Display name
+  address: string;         // Physical location
+  logoColor: string;       // Tailwind CSS class (e.g., 'bg-blue-600')
+}
+```
+
+### Default Store
+
+PromoMaster Pro initializes with one default store:
+- **Name**: "Sucursal Central"
+- **Address**: "Av. Libertador 1234"
+- **Color**: Blue (`bg-blue-600`)
+
+This ensures the application works immediately after installation.
+
+### Data Persistence
+
+Stores are saved to browser localStorage:
+- **Key**: `promomaster_data_v2`
+- **Format**: JSON object containing all stores
+- **Persistence**: Data survives browser restarts
+- **Scope**: Per-browser, per-domain
+
+<Warning>
+  Clearing browser data will delete all stores. Consider implementing backup/export functionality for production use.
+</Warning>
+
+## Troubleshooting Multi-Store Issues
+
+<AccordionGroup>
+  <Accordion title="Store dropdown is empty in Dashboard">
+    This means no stores exist in your database.
+    
+    **Solution**:
+    1. Go to Gestión Total → Sucursales
+    2. Create at least one store
+    3. Return to Dashboard - the dropdown will populate
+  </Accordion>
+
+  <Accordion title="Display shows wrong store information">
+    The store selected in the Dashboard doesn't match the display.
+    
+    **Solution**:
+    1. Return to Dashboard (exit display)
+    2. Verify the correct store is selected in the dropdown
+    3. Launch display again
+    
+    The store selection happens when you click "Iniciar Transmisión", not during playlist building.
+  </Accordion>
+
+  <Accordion title="Can't delete the last store">
+    PromoMaster Pro allows deleting any store, but you need at least one store for displays to work.
+    
+    **Best Practice**:
+    - Always keep at least one active store
+    - Create a new store before deleting the last one
+    - Consider a "Default" store that always exists
+  </Accordion>
+
+  <Accordion title="Store changes don't appear in displays">
+    If you edit a store while a display is running, changes won't reflect until the next launch.
+    
+    **Solution**:
+    1. Exit the current display
+    2. Make store edits in Gestión Total
+    3. Launch display again to see changes
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+Now that you can manage multiple stores:
+
+- [Customizing Display](/guides/customizing-display) - Brand each store with unique colors and styles
+- [Best Practices](/guides/best-practices) - Optimize your multi-store content strategy
+- [Creating Your First Ad](/guides/creating-first-ad) - Review the basics of ad creation

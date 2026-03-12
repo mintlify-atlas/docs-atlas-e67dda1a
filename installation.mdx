@@ -1,0 +1,399 @@
+---
+title: 'Installation'
+description: 'Set up PromoMaster Pro with detailed browser requirements and optional AI configuration'
+icon: 'download'
+---
+
+PromoMaster Pro is designed for simplicity with zero build tools, no npm install, and no server required. Open `index.html` and start creating digital signage immediately.
+
+## System Requirements
+
+<CardGroup cols={2}>
+  <Card title="Browser Support" icon="browser">
+    Modern browsers with ES6+ module support:
+    - Chrome 89+
+    - Firefox 89+
+    - Safari 15+
+    - Edge 89+
+  </Card>
+  
+  <Card title="Hardware" icon="microchip">
+    Minimal requirements:
+    - 2GB RAM minimum
+    - Any display resolution
+    - Touch screen optional
+  </Card>
+</CardGroup>
+
+## Basic Installation
+
+<Steps>
+  <Step title="Download or Clone">
+    Get the PromoMaster Pro source code from your repository or deployment package.
+    
+    ```bash Terminal
+    # If using Git
+    git clone <repository-url>
+    cd promomaster-pro
+    ```
+  </Step>
+
+  <Step title="Open in Browser">
+    No build process required. Simply open the HTML file:
+    
+    ```bash Terminal
+    # Navigate to source directory
+    cd source
+    
+    # Open in your default browser
+    open index.html  # macOS
+    xdg-open index.html  # Linux
+    start index.html  # Windows
+    ```
+    
+    Or double-click `index.html` in your file explorer.
+  </Step>
+
+  <Step title="Verify Dependencies">
+    The application uses ESM.sh CDN for all dependencies. Check that you have internet access for first load:
+    
+    ```html index.html:26-36
+    <script type="importmap">
+    {
+      "imports": {
+        "react/": "https://esm.sh/react@^19.2.3/",
+        "react": "https://esm.sh/react@^19.2.3",
+        "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+        "@google/genai": "https://esm.sh/@google/genai@^1.35.0",
+        "lucide-react": "https://esm.sh/lucide-react@^0.562.0"
+      }
+    }
+    </script>
+    ```
+    
+    <Info>
+      After initial load, browsers cache these dependencies. The app can run offline for subsequent sessions.
+    </Info>
+  </Step>
+</Steps>
+
+## Technology Stack
+
+PromoMaster Pro leverages modern web technologies for optimal performance:
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| React | 19.2.3 | UI framework |
+| Tailwind CSS | Latest (CDN) | Styling utilities |
+| Lucide React | 0.562.0 | Icon library |
+| Google GenAI SDK | 1.35.0 | AI features (optional) |
+
+All dependencies are loaded via [ESM.sh](https://esm.sh), eliminating the need for a build process.
+
+## Data Persistence
+
+PromoMaster Pro uses browser `localStorage` for data persistence:
+
+```tsx App.tsx:9
+const STORAGE_KEY = 'promomaster_data_v2';
+```
+
+### What Gets Stored
+
+The application automatically saves:
+- Store locations and details
+- Product catalog with images
+- Custom announcements
+- Display preferences (duration settings)
+
+### Storage Format
+
+```tsx App.tsx:18-41
+const [state, setState] = useState<AppState>(() => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return {
+        ...parsed,
+        announcements: parsed.announcements || [],
+        view: 'dashboard'
+      };
+    }
+  } catch (e) {
+    console.error("Failed to load state from storage", e);
+  }
+  return {
+    stores: [
+      { id: '1', name: 'Sucursal Central', address: 'Av. Libertador 1234', logoColor: 'bg-blue-600' }
+    ],
+    products: [],
+    announcements: [],
+    displayDuration: 5,
+    view: 'dashboard'
+  };
+});
+```
+
+<Warning>
+  **localStorage is browser-specific**: Data saved in Chrome won't appear in Firefox, and clearing browser data will delete your content. For production use, consider implementing a backend API or export/import functionality.
+</Warning>
+
+### Auto-Save Behavior
+
+Every state change triggers an automatic save:
+
+```tsx App.tsx:45-47
+useEffect(() => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}, [state]);
+```
+
+## Google Gemini AI Setup (Optional)
+
+PromoMaster Pro integrates with Google Gemini API for AI-powered features like automatic image generation and slogan creation.
+
+<Steps>
+  <Step title="Get API Key">
+    1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
+    2. Sign in with your Google account
+    3. Create a new API key
+    4. Copy the key (starts with `AI...`)
+    
+    <Tip>
+      Google offers free credits for Gemini API experimentation. Check their pricing page for current limits.
+    </Tip>
+  </Step>
+
+  <Step title="Configure Environment">
+    Set the API key as an environment variable. The method depends on your setup:
+    
+    **For Local Development:**
+    ```bash .env (create this file)
+    API_KEY=your_gemini_api_key_here
+    ```
+    
+    **For Vite Dev Server:**
+    If using `npm run dev`, Vite automatically loads `.env` files:
+    
+    ```bash Terminal
+    npm run dev
+    ```
+    
+    **For Production/Static Hosting:**
+    Since PromoMaster Pro runs client-side, the API key must be embedded at build time or loaded via a backend proxy for security.
+  </Step>
+
+  <Step title="Verify Integration">
+    The AI service initializes with your API key:
+    
+    ```tsx geminiService.ts:4-5
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    ```
+    
+    Test the features:
+    1. Go to **"Gestión Total"** → **"Productos"**
+    2. Enter a product name
+    3. Click the **AI** button under image source
+    4. Click **"Generar con IA"**
+    5. Wait 5-10 seconds for image generation
+    
+    <Note>
+      If the API key is missing or invalid, AI features will fail gracefully without breaking the app. Check the browser console for error messages.
+    </Note>
+  </Step>
+</Steps>
+
+## AI Capabilities
+
+With Google Gemini configured, you get access to:
+
+<CardGroup cols={2}>
+  <Card title="Image Generation" icon="image">
+    **Model**: `gemini-2.5-flash-image`
+    
+    Creates professional product photography from text descriptions. Uses 1:1 aspect ratio optimized for digital signage displays.
+    
+    ```tsx geminiService.ts:47-61
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash-image',
+      contents: {
+        parts: [{ text: prompt }]
+      },
+      config: {
+        imageConfig: {
+          aspectRatio: "1:1"
+        }
+      }
+    });
+    ```
+  </Card>
+  
+  <Card title="Slogan Generation" icon="sparkles">
+    **Model**: `gemini-3-flash-preview`
+    
+    Generates short, impactful marketing slogans (max 5 words) based on product name and description.
+    
+    ```tsx geminiService.ts:7-18
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: `Genera un eslogan de marketing corto (máximo 5 palabras), impactante y llamativo para un producto llamado "${productName}" que se describe como: "${description}". Responde solo con el texto del eslogan.`,
+    });
+    return response.text?.trim() || "¡La mejor oferta para vos!";
+    ```
+  </Card>
+</CardGroup>
+
+## Development Mode (Optional)
+
+For developers who want to modify the source code:
+
+<Steps>
+  <Step title="Install Dependencies">
+    ```bash Terminal
+    npm install
+    ```
+    
+    This installs:
+    - `vite` - Development server and build tool
+    - `@vitejs/plugin-react` - React support
+    - `typescript` - Type checking
+  </Step>
+
+  <Step title="Start Dev Server">
+    ```bash Terminal
+    npm run dev
+    ```
+    
+    Opens at `http://localhost:5173` with hot module reloading.
+  </Step>
+
+  <Step title="Build for Production">
+    ```bash Terminal
+    npm run build
+    ```
+    
+    Outputs to `dist/` directory with optimized bundles.
+  </Step>
+</Steps>
+
+<Note>
+  **Most users don't need this**: The standalone `index.html` works perfectly for production deployments. Use the dev mode only if you're customizing the codebase.
+</Note>
+
+## Browser Compatibility Notes
+
+### Required Features
+
+PromoMaster Pro requires these modern browser APIs:
+
+- **ES Modules**: For importing React and dependencies
+- **localStorage**: For data persistence
+- **crypto.randomUUID()**: For generating unique IDs
+- **FileReader API**: For image uploads
+- **CSS Grid & Flexbox**: For layout
+
+### Fallback Behavior
+
+```tsx App.tsx:18-31
+try {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    const parsed = JSON.parse(saved);
+    return {
+      ...parsed,
+      announcements: parsed.announcements || [],
+      view: 'dashboard'
+    };
+  }
+} catch (e) {
+  console.error("Failed to load state from storage", e);
+}
+```
+
+If `localStorage` is unavailable or corrupted, the app resets to default state with one demo store.
+
+## Security Considerations
+
+<Warning>
+  **API Key Exposure**: Embedding the Gemini API key in client-side code exposes it to users. For production:
+  
+  1. Implement a backend proxy to hide the key
+  2. Use API key restrictions (IP allowlists, referrer restrictions)
+  3. Monitor usage quotas in Google AI Studio
+  4. Consider disabling AI features for public deployments
+</Warning>
+
+### Recommended Architecture
+
+```
+[Browser] → [Your Backend API] → [Google Gemini]
+              (Hides API key)
+```
+
+Your backend receives product names, calls Gemini, and returns results without exposing credentials.
+
+## Kiosk Mode Setup
+
+For dedicated display devices:
+
+1. **Browser Kiosk Extensions**:
+   - Chrome: Use `--kiosk` flag or kiosk extensions
+   - Firefox: Full screen mode with disabled UI
+
+2. **Prevent Sleep**:
+   - Enable "prevent display sleep" in OS settings
+   - Use kiosk software that manages power settings
+
+3. **Auto-Refresh**:
+   - Consider browser extensions that reload on errors
+   - Implement network monitoring for uptime
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Blank screen on first load">
+    Check the browser console (F12) for errors. Common causes:
+    - Network blocking ESM.sh (corporate firewall)
+    - Outdated browser without ES module support
+    - JavaScript disabled in browser settings
+  </Accordion>
+
+  <Accordion title="AI features not working">
+    Verify:
+    - API key is correctly set in environment
+    - Internet connection is active
+    - Google AI services are not blocked by firewall
+    - Check browser console for specific error messages
+  </Accordion>
+
+  <Accordion title="Data lost after browser update">
+    Browser updates can clear storage. To prevent:
+    - Export data regularly (implement export feature)
+    - Use persistent storage mode if available
+    - Consider backend synchronization
+  </Accordion>
+
+  <Accordion title="Slow performance on older devices">
+    PromoMaster Pro is optimized for modern hardware. For older devices:
+    - Reduce image file sizes
+    - Disable animations in announcements
+    - Decrease display duration for less frequent re-renders
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Quickstart Guide" icon="rocket" href="/quickstart">
+    Complete your first display setup
+  </Card>
+  
+  <Card title="Product Management" icon="box" href="/features/product-management">
+    Learn advanced product configuration
+  </Card>
+  
+  <Card title="Display Mode" icon="tv" href="/features/display-mode">
+    Customize your digital signage output
+  </Card>
+</CardGroup>

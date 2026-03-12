@@ -1,0 +1,399 @@
+---
+title: 'AI Setup & Configuration'
+description: 'Configure Google Gemini API access for AI-powered features'
+icon: 'gear'
+---
+
+## Prerequisites
+
+Before using PromoMaster Pro's AI features, you'll need:
+
+<CardGroup cols={2}>
+  <Card title="Google Account" icon="google">
+    Required to access Google AI Studio
+  </Card>
+  <Card title="Internet Connection" icon="wifi">
+    Active connection for API requests
+  </Card>
+  <Card title="Modern Browser" icon="browser">
+    Chrome, Firefox, Safari, or Edge
+  </Card>
+  <Card title="API Key" icon="key">
+    Free from Google AI Studio
+  </Card>
+</CardGroup>
+
+## Getting Your Gemini API Key
+
+<Steps>
+  <Step title="Visit Google AI Studio">
+    Navigate to [Google AI Studio](https://ai.google.dev/) and sign in with your Google account.
+  </Step>
+  
+  <Step title="Create API Key">
+    Click on **"Get API Key"** in the main dashboard or navigation menu.
+    
+    <Info>
+      In the Google AI Studio dashboard, look for the "Get API key" button in the top navigation.
+    </Info>
+  </Step>
+  
+  <Step title="Generate New Key">
+    Click **"Create API Key"** and select or create a Google Cloud project.
+    
+    <Warning>
+      Keep your API key secure and never share it publicly or commit it to version control.
+    </Warning>
+  </Step>
+  
+  <Step title="Copy API Key">
+    Copy the generated API key - you'll need this for configuration.
+  </Step>
+</Steps>
+
+<Info>
+  **Free Credits Available**: New users receive free credits to test Gemini models, perfect for prototyping with PromoMaster Pro!
+</Info>
+
+## Configuration
+
+### Environment Setup
+
+The application expects the API key in the `API_KEY` environment variable:
+
+```typescript services/geminiService.ts
+import { GoogleGenAI } from "@google/genai";
+
+// Initialize with API key from environment
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+```
+
+### Setting the API Key
+
+The configuration method depends on your deployment environment:
+
+<Tabs>
+  <Tab title="Local Development">
+    For local development, set the environment variable before starting the application:
+    
+    ```bash
+    export API_KEY="your-gemini-api-key-here"
+    ```
+    
+    Or create a `.env` file in the project root:
+    
+    ```bash .env
+    API_KEY=your-gemini-api-key-here
+    ```
+    
+    <Warning>
+      **Security**: Add `.env` to your `.gitignore` to prevent accidentally committing your API key:
+      ```gitignore
+      .env
+      .env.local
+      ```
+    </Warning>
+  </Tab>
+  
+  <Tab title="Browser/Static Hosting">
+    Since PromoMaster Pro runs as a static HTML application, you'll need to modify the source code directly:
+    
+    **Option 1: Direct Configuration (Development Only)**
+    
+    Edit `services/geminiService.ts`:
+    
+    ```typescript
+    const ai = new GoogleGenAI({ 
+      apiKey: "your-gemini-api-key-here" 
+    });
+    ```
+    
+    <Warning>
+      **⚠️ Security Risk**: Never commit API keys to version control. This method is only suitable for local testing.
+    </Warning>
+    
+    **Option 2: Runtime Configuration (Recommended)**
+    
+    Implement a configuration UI to accept the API key from users:
+    
+    ```typescript
+    // Store in localStorage
+    localStorage.setItem('gemini_api_key', userProvidedKey);
+    
+    // Initialize AI service
+    const ai = new GoogleGenAI({ 
+      apiKey: localStorage.getItem('gemini_api_key') || '' 
+    });
+    ```
+  </Tab>
+  
+  <Tab title="Cloud Deployment">
+    For cloud platforms, use their environment variable configuration:
+    
+    **Vercel:**
+    ```bash
+    vercel env add API_KEY
+    ```
+    
+    **Netlify:**
+    Add in Site Settings → Environment Variables:
+    ```
+    API_KEY = your-gemini-api-key-here
+    ```
+    
+    **AWS/Other Hosting:**
+    Configure through your platform's environment variable management system.
+  </Tab>
+</Tabs>
+
+## Verifying Configuration
+
+### Test the Setup
+
+After configuration, verify that AI features are working:
+
+<Steps>
+  <Step title="Open Management Interface">
+    Navigate to the **Gestión Total** (Management) section of PromoMaster Pro.
+  </Step>
+  
+  <Step title="Create Test Product">
+    Click on the **Products** tab and create a new product:
+    - Enter a product name (e.g., "Test Product")
+    - Fill in required fields
+  </Step>
+  
+  <Step title="Test Slogan Generation">
+    Click the **Sparkles** button next to the slogan field. If configured correctly, an AI-generated slogan should appear within 1-3 seconds.
+  </Step>
+  
+  <Step title="Test Image Generation">
+    Select the **AI** tab in the image section and click **"Generar con IA"**. An AI-generated product image should appear within 2-5 seconds.
+  </Step>
+</Steps>
+
+<Check>
+  If both features work, your configuration is complete!
+</Check>
+
+### Troubleshooting Configuration Issues
+
+<AccordionGroup>
+  <Accordion title="API key not recognized" icon="circle-xmark">
+    **Symptoms:**
+    - Error messages in browser console
+    - Fallback slogans always returned
+    - Image generation returns null
+    
+    **Solutions:**
+    1. Verify the API key is correctly copied (no extra spaces)
+    2. Check that the environment variable is properly set
+    3. Restart your development server after setting environment variables
+    4. Ensure the API key has not been revoked in Google AI Studio
+  </Accordion>
+  
+  <Accordion title="API quota exceeded" icon="chart-line">
+    **Symptoms:**
+    - Features work initially but stop later
+    - Console shows quota or rate limit errors
+    
+    **Solutions:**
+    1. Check your usage in [Google AI Studio](https://ai.google.dev/)
+    2. Wait for quota to reset (typically daily)
+    3. Upgrade to a paid tier if needed for production use
+    4. Implement caching to reduce API calls
+  </Accordion>
+  
+  <Accordion title="CORS or network errors" icon="globe">
+    **Symptoms:**
+    - Network errors in console
+    - "Failed to fetch" errors
+    
+    **Solutions:**
+    1. Verify internet connectivity
+    2. Check if a firewall is blocking Google AI services
+    3. Ensure browser allows requests to Google APIs
+    4. Try from a different network if using corporate/restricted WiFi
+  </Accordion>
+  
+  <Accordion title="Features work but slowly" icon="clock">
+    **Symptoms:**
+    - Long wait times (>10 seconds)
+    - Timeouts
+    
+    **Solutions:**
+    - This is typically due to API server load, not configuration
+    - Ensure loading indicators are visible to users
+    - Consider implementing request timeouts and retry logic
+  </Accordion>
+</AccordionGroup>
+
+## Security Best Practices
+
+<Warning>
+  **API Key Security is Critical**: Exposed API keys can be misused, leading to unexpected charges or quota exhaustion.
+</Warning>
+
+### Key Security Guidelines
+
+<Steps>
+  <Step title="Never Commit Keys to Git">
+    Add sensitive files to `.gitignore`:
+    ```gitignore
+    .env
+    .env.local
+    .env.production
+    **/config/secrets.*
+    ```
+  </Step>
+  
+  <Step title="Restrict API Key Permissions">
+    In Google AI Studio:
+    - Limit key to specific Gemini models
+    - Set usage quotas
+    - Enable usage monitoring
+  </Step>
+  
+  <Step title="Use Environment Variables">
+    Always use environment variables, never hardcode:
+    ```typescript
+    // ✅ Correct
+    apiKey: process.env.API_KEY
+    
+    // ❌ Never do this
+    apiKey: "AIzaSyDirect_API_Key_Here"
+    ```
+  </Step>
+  
+  <Step title="Rotate Keys Regularly">
+    Periodically generate new API keys and revoke old ones in Google AI Studio.
+  </Step>
+  
+  <Step title="Monitor Usage">
+    Regularly check your [Google AI Studio dashboard](https://ai.google.dev/) for unexpected usage patterns.
+  </Step>
+</Steps>
+
+## API Usage & Pricing
+
+### Free Tier
+
+Google Gemini offers generous free credits for testing and development:
+
+<CardGroup cols={2}>
+  <Card title="Image Generation" icon="image">
+    **gemini-2.5-flash-image**
+    
+    Free credits available for prototyping
+  </Card>
+  <Card title="Text Generation" icon="text">
+    **gemini-3-flash-preview**
+    
+    Free credits for slogan and color generation
+  </Card>
+</CardGroup>
+
+<Info>
+  Check current free tier limits and pricing at [Google AI Pricing](https://ai.google.dev/pricing).
+</Info>
+
+### Rate Limits
+
+Be aware of rate limits to avoid service interruptions:
+
+| Model | Rate Limit | Recommendation |
+|-------|------------|----------------|
+| gemini-2.5-flash-image | ~15 requests/minute | Implement button disable during generation |
+| gemini-3-flash-preview | ~60 requests/minute | Cache results when possible |
+
+<Tip>
+  The PromoMaster Pro UI already implements button disabling during generation to help prevent rate limit issues:
+  ```tsx
+  disabled={isGeneratingImage || !productForm.name}
+  ```
+</Tip>
+
+## Model Configuration Details
+
+### Current Models Used
+
+```typescript services/geminiService.ts
+// Image generation
+model: 'gemini-2.5-flash-image'
+
+// Slogan and color generation  
+model: 'gemini-3-flash-preview'
+```
+
+<Note>
+  These models are specified in the codebase and optimized for PromoMaster Pro's use cases. Future updates may use newer Gemini models as they become available.
+</Note>
+
+### Customizing Models
+
+To use different Gemini models, edit `services/geminiService.ts`:
+
+```typescript
+export const generateProductImage = async (productName: string) => {
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-flash-image', // Change to desired model
+    // ... rest of configuration
+  });
+};
+```
+
+## Configuration Reference
+
+### Required Environment Variables
+
+<ParamField path="API_KEY" type="string" required>
+  Your Google Gemini API key from [Google AI Studio](https://ai.google.dev/)
+  
+  **Format:** String starting with `AIza...`
+  
+  **Example:** `AIzaSyDXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX`
+</ParamField>
+
+### Optional Configuration
+
+For advanced users, you can customize the AI initialization:
+
+```typescript
+const ai = new GoogleGenAI({ 
+  apiKey: process.env.API_KEY,
+  // Optional: Add custom headers, timeouts, etc.
+});
+```
+
+## Next Steps
+
+With your AI features configured, explore what you can do:
+
+<CardGroup cols={2}>
+  <Card title="Generate Images" icon="image" href="/ai/image-generation">
+    Create professional product photography with AI
+  </Card>
+  <Card title="Create Slogans" icon="wand-magic-sparkles" href="/ai/slogan-generation">
+    Generate impactful marketing messages
+  </Card>
+  <Card title="AI Overview" icon="sparkles" href="/ai/overview">
+    Learn about all AI capabilities
+  </Card>
+  <Card title="Product Management" icon="box" href="/features/product-management">
+    Start managing your product catalog
+  </Card>
+</CardGroup>
+
+## Additional Resources
+
+<CardGroup cols={3}>
+  <Card title="Google AI Studio" icon="google" href="https://ai.google.dev/">
+    Manage API keys and usage
+  </Card>
+  <Card title="Gemini Documentation" icon="book" href="https://ai.google.dev/docs">
+    Official API documentation
+  </Card>
+  <Card title="Pricing Information" icon="dollar-sign" href="https://ai.google.dev/pricing">
+    Current rates and free tier details
+  </Card>
+</CardGroup>

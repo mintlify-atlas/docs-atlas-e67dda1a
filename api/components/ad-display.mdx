@@ -1,0 +1,521 @@
+---
+title: 'AdDisplay'
+description: 'Fullscreen advertisement display component with carousel and animations'
+icon: 'tv'
+---
+
+## Overview
+
+The `AdDisplay` component renders a fullscreen, immersive advertisement display with automatic carousel rotation, animated transitions, and dynamic theming. It supports both product promotions and custom announcements with a professional TV-style presentation.
+
+## Props Interface
+
+```tsx
+interface AdDisplayProps {
+  items: (Product | Announcement)[];
+  store: Store;
+  duration: number;
+  onExit: () => void;
+}
+```
+
+### Props
+
+<ParamField path="items" type="(Product | Announcement)[]" required>
+  Array of items to display in the carousel. Must contain at least one item.
+</ParamField>
+
+<ParamField path="store" type="Store" required>
+  Store information for branding (name, address, logo color)
+</ParamField>
+
+<ParamField path="duration" type="number" required>
+  Duration in seconds for each slide before auto-advancing
+</ParamField>
+
+<ParamField path="onExit" type="() => void" required>
+  Callback function to exit fullscreen display mode
+</ParamField>
+
+## Component State
+
+<ParamField path="currentIndex" type="number">
+  Index of the currently displayed item (default: 0)
+</ParamField>
+
+<ParamField path="showContent" type="boolean">
+  Controls fade-in animation of content (default: false)
+</ParamField>
+
+<ParamField path="progress" type="number">
+  Progress percentage (0-100) for the progress bar
+</ParamField>
+
+## Computed Values
+
+### Current Item Detection
+
+```tsx
+const currentItem = items[currentIndex];
+const isProduct = 'price' in currentItem;
+const product = isProduct ? (currentItem as Product) : null;
+const announcement = !isProduct ? (currentItem as Announcement) : null;
+```
+
+The component uses TypeScript type guards to determine whether the current item is a Product or Announcement.
+
+### Theme Color
+
+```tsx
+const themeColor = product 
+  ? (product.primaryColor || '#4f46e5') 
+  : (announcement?.backgroundColor || '#1e293b');
+```
+
+Dynamically extracts theme color from product or announcement for consistent styling.
+
+### Promotion Labels
+
+```tsx
+const getPromoLabel = (type?: string) => {
+  switch (type) {
+    case 'dia': return '¡OFERTA DEL DÍA!';
+    case 'semana': return '¡OFERTA DE LA SEMANA!';
+    case 'general':
+    default: return '¡OFERTA IMPERDIBLE!';
+  }
+};
+```
+
+## Key Methods
+
+### nextSlide
+
+```tsx
+const nextSlide = useCallback(() => {
+  setShowContent(false);
+  setTimeout(() => {
+    setCurrentIndex((prev) => (prev + 1) % items.length);
+    setProgress(0);
+    setShowContent(true);
+  }, 500);
+}, [items.length]);
+```
+
+Handles transition to the next slide with fade-out/fade-in animation.
+
+**Flow**:
+1. Fade out current content (`setShowContent(false)`)
+2. Wait 500ms for animation
+3. Update index (wraps to 0 after last item)
+4. Reset progress bar
+5. Fade in new content
+
+## Effects
+
+### Initial Content Display
+
+```tsx
+useEffect(() => {
+  const timer = setTimeout(() => setShowContent(true), 300);
+  return () => clearTimeout(timer);
+}, []);
+```
+
+Fades in content 300ms after mount.
+
+### Auto-Advance Timer
+
+```tsx
+useEffect(() => {
+  if (items.length <= 1) return;
+
+  const interval = 100;
+  const totalSteps = (duration * 1000) / interval;
+  
+  const timer = setInterval(() => {
+    setProgress((prev) => {
+      if (prev >= 100) {
+        nextSlide();
+        return 0;
+      }
+      return prev + (100 / totalSteps);
+    });
+  }, interval);
+
+  return () => clearInterval(timer);
+}, [duration, items.length, nextSlide]);
+```
+
+**Behavior**:
+- Only runs if multiple items exist
+- Updates progress bar every 100ms
+- Calculates increments based on duration
+- Triggers `nextSlide()` when reaching 100%
+- Cleans up timer on unmount
+
+## Ticker Messages
+
+Dynamic ticker tape messages generated with `useMemo`:
+
+```tsx
+const tickerMessages = useMemo(() => {
+  if (isProduct && product) {
+    const messages = [
+      product.name.toUpperCase(),
+      "CALIDAD GARANTIZADA",
+      "DISPONIBLE AHORA",
+      store.name.toUpperCase()
+    ];
+    if (product.isPromotion) {
+      messages.push("¡OFERTA LIMITADA!");
+      messages.push(`MEJOR PRECIO: $${product.price.toLocaleString()}`);
+    }
+    if (product.category?.toLowerCase().includes('carne')) {
+      messages.push("CALIDAD PREMIUM SELECCIONADA");
+    }
+    return messages;
+  } else if (announcement) {
+    return [
+      announcement.title.toUpperCase(),
+      "AVISO IMPORTANTE",
+      store.name.toUpperCase(),
+      "¡GRACIAS POR SU VISITA!"
+    ];
+  }
+  return [];
+}, [currentItem, store.name, isProduct, product, announcement]);
+```
+
+**Product Messages**:
+- Product name
+- "CALIDAD GARANTIZADA"
+- "DISPONIBLE AHORA"
+- Store name
+- Promotion-specific messages (if applicable)
+- Category-specific messages (e.g., meat quality)
+
+**Announcement Messages**:
+- Announcement title
+- "AVISO IMPORTANTE"
+- Store name
+- "¡GRACIAS POR SU VISITA!"
+
+## UI Structure
+
+### Progress Bar
+
+```tsx
+{items.length > 1 && (
+  <div className="absolute top-0 left-0 w-full h-1.5 bg-white/5 z-[150]">
+    <div 
+      className="h-full transition-all duration-100 ease-linear" 
+      style={{ 
+        width: `${progress}%`, 
+        backgroundColor: themeColor 
+      }}
+    ></div>
+  </div>
+)}
+```
+
+Only shown when multiple items exist. Color-coded to match theme.
+
+### Background Effects
+
+```tsx
+<div className="absolute top-0 left-0 w-full h-full opacity-30">
+  <div 
+    className="absolute top-[-15%] left-[-10%] w-[50%] h-[50%] blur-[200px] rounded-full animate-pulse" 
+    style={{ backgroundColor: themeColor }}
+  ></div>
+  <div 
+    className="absolute bottom-[-15%] right-[-10%] w-[35%] h-[35%] blur-[160px] rounded-full animate-pulse opacity-60" 
+    style={{ backgroundColor: themeColor, animationDelay: '1.5s' }}
+  ></div>
+</div>
+```
+
+Dynamic gradient blobs that pulse with theme color.
+
+### Exit Button
+
+```tsx
+<button 
+  onClick={onExit} 
+  className="p-4 bg-rose-600/80 hover:bg-rose-500 text-white rounded-xl"
+>
+  <X size={24} />
+</button>
+```
+
+Fixed in top-right corner with hover animation.
+
+## Product Display Layout
+
+### Image Container
+
+```tsx
+<div className="relative w-72 h-72 md:w-[28rem] md:h-[28rem] xl:w-[32rem] xl:h-[32rem] rounded-[3.5rem] overflow-hidden">
+  <img 
+    src={product.imageUrl || `https://picsum.photos/seed/${product.id}/1200`} 
+    className="w-full h-full object-cover animate-softZoom" 
+  />
+  
+  {product.isPromotion && (
+    <div className="absolute top-6 left-6 font-bebas text-4xl animate-pulse" 
+         style={{ backgroundColor: themeColor }}>
+      {getPromoLabel(product.promotionType)}
+    </div>
+  )}
+  
+  <div className="absolute bottom-6 left-6">
+    <div className="bg-black/40 backdrop-blur-md px-5 py-2.5 rounded-2xl">
+      <ShieldCheck size={20} className="text-emerald-400" />
+      <span>PREMIUM</span>
+    </div>
+  </div>
+</div>
+```
+
+**Features**:
+- Responsive sizing (mobile: 288px, desktop: 512px)
+- Automatic fallback to picsum placeholder
+- Soft zoom animation
+- Promotion badge overlay (if applicable)
+- Premium quality badge
+
+### Content Section
+
+```tsx
+<div className="flex flex-col space-y-8 text-white">
+  <header>
+    {/* Store badge */}
+    <div style={{ backgroundColor: `${themeColor}22`, color: themeColor }}>
+      <Zap size={16} />
+      {store.name}
+    </div>
+    
+    {/* Product name */}
+    <h1 className="text-7xl font-bebas">
+      {product.name}
+    </h1>
+    
+    {/* Slogan */}
+    {product.slogan && (
+      <p className="text-3xl font-black italic" style={{ color: themeColor }}>
+        "{product.slogan}"
+      </p>
+    )}
+  </header>
+
+  {/* Price display */}
+  <div className="flex items-baseline">
+    <span className="text-[10rem] font-bebas">
+      <span className="text-5xl" style={{ color: themeColor }}>$</span>
+      {product.price.toLocaleString()}
+    </span>
+    <span className="text-3xl">/ {product.unit}</span>
+  </div>
+
+  {/* Store location card */}
+  <div className="p-8 bg-white/5 rounded-[2.5rem]">
+    <div className="text-[10px] uppercase">
+      <Star size={12} /> UBICACIÓN
+    </div>
+    <div className="text-xl">{store.address}</div>
+    <ChevronRight size={32} style={{ backgroundColor: themeColor }} />
+  </div>
+</div>
+```
+
+## Announcement Display Layout
+
+```tsx
+<div 
+  className="w-full max-w-6xl p-16 rounded-[4rem]" 
+  style={{ backgroundColor: `${announcement.backgroundColor}DD` }}
+>
+  {/* Store header */}
+  <div className="bg-white/10 px-10 py-4 rounded-[2rem]">
+    <Megaphone size={40} />
+    <span className="text-2xl font-black uppercase">{store.name}</span>
+  </div>
+
+  {/* Message */}
+  <div 
+    className={announcement.fontFamily}
+    style={{ 
+      fontSize: `${announcement.fontSize}px`, 
+      color: announcement.textColor,
+      textAlign: announcement.textAlign
+    }}
+  >
+    {announcement.message}
+  </div>
+</div>
+```
+
+**Features**:
+- Uses announcement's custom font, size, color, and alignment
+- Optional shine animation effect
+- Translucent background with backdrop blur
+
+## Bottom Ticker
+
+```tsx
+<div className="absolute bottom-4 left-0 w-full bg-black/40 backdrop-blur-md py-4 overflow-hidden">
+  <div className="flex animate-marquee space-x-20">
+    {[...Array(6)].map((_, i) => (
+      <React.Fragment key={i}>
+        {tickerMessages.map((msg, idx) => (
+          <span 
+            className="font-bebas text-3xl"
+            style={{ color: idx % 2 !== 0 ? themeColor : undefined }}
+          >
+            {msg}
+            <div className="w-2 h-2 rounded-full bg-white/20"></div>
+          </span>
+        ))}
+      </React.Fragment>
+    ))}
+  </div>
+</div>
+```
+
+**Behavior**:
+- Infinite horizontal scroll
+- Repeats messages 6 times
+- Alternates between white and theme color
+- Dot separators between messages
+- Animation duration: 35s
+
+## Slide Indicators
+
+```tsx
+{items.length > 1 && (
+  <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex gap-3">
+    {items.map((_, i) => (
+      <div 
+        key={i} 
+        className={`h-2 rounded-full cursor-pointer ${
+          i === currentIndex ? 'w-12 bg-white' : 'w-2 bg-white/10'
+        }`}
+        style={{ backgroundColor: i === currentIndex ? themeColor : undefined }}
+        onClick={() => {
+          setCurrentIndex(i);
+          setProgress(0);
+          setShowContent(false);
+          setTimeout(() => setShowContent(true), 100);
+        }}
+      />
+    ))}
+  </div>
+)}
+```
+
+**Features**:
+- Clickable navigation
+- Current indicator is elongated (48px vs 8px)
+- Theme-colored when active
+- Only shown for multiple items
+
+## Animations
+
+Custom keyframe animations defined in component styles:
+
+```css
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes softZoom {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+.animate-softZoom {
+  animation: softZoom 15s ease-in-out infinite;
+}
+
+.animate-marquee {
+  display: flex;
+  width: fit-content;
+  animation: marquee 35s linear infinite;
+}
+```
+
+## Usage Example
+
+```tsx
+import AdDisplay from './components/AdDisplay';
+import { useState } from 'react';
+
+function App() {
+  const [isDisplaying, setIsDisplaying] = useState(false);
+  
+  const products = [
+    {
+      id: '1',
+      name: 'Carne Premium',
+      price: 2500,
+      unit: 'kg',
+      isPromotion: true,
+      promotionType: 'dia',
+      slogan: 'La mejor calidad para tu familia',
+      imageUrl: '/images/carne.jpg',
+      primaryColor: '#dc2626',
+      category: 'Carnes',
+      description: ''
+    }
+  ];
+
+  const store = {
+    id: '1',
+    name: 'Supermercado Central',
+    address: 'Av. Libertador 1234',
+    logoColor: 'bg-blue-600'
+  };
+
+  if (isDisplaying) {
+    return (
+      <AdDisplay
+        items={products}
+        store={store}
+        duration={5}
+        onExit={() => setIsDisplaying(false)}
+      />
+    );
+  }
+
+  return (
+    <button onClick={() => setIsDisplaying(true)}>
+      Start Display
+    </button>
+  );
+}
+```
+
+## Responsive Behavior
+
+- **Mobile**: Smaller image (288px), vertical layout
+- **Tablet**: Medium image (448px), adjusted spacing
+- **Desktop**: Large image (512px), horizontal layout with wide spacing
+- **4K/XL**: Extra-large typography and images
+
+## Accessibility Considerations
+
+- `select-none` class prevents text selection
+- Exit button has hover states and active scale animation
+- High contrast text colors
+- Large, readable typography
+- Clear visual hierarchy
+
+## Type Dependencies
+
+- `Product` - from `../types`
+- `Store` - from `../types`
+- `Announcement` - from `../types`
+
+See the [Types Reference](/api/types) for complete type definitions.

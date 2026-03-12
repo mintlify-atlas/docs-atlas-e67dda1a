@@ -1,0 +1,295 @@
+---
+title: 'Product Management'
+description: 'Create and manage products with pricing, images, and promotional settings'
+icon: 'box'
+---
+
+## Overview
+
+Product Management is the core feature for creating and organizing your product catalog. Each product can include images, pricing, promotional flags, AI-generated slogans, and custom theming for a stunning display experience.
+
+<Info>
+Products created here become available in the Dashboard for building playlists and launching promotional displays.
+</Info>
+
+## Accessing Product Management
+
+Navigate to **Gestión Total** (Management) from the sidebar. The **Productos** (Products) tab is selected by default.
+
+## Creating a New Product
+
+<Steps>
+  <Step title="Enter Product Name">
+    The product name is the only required field. This will be the headline on your promotional display.
+  </Step>
+  
+  <Step title="Add Product Image">
+    Choose one of three image input methods:
+    - **URL**: Paste an image link
+    - **Subir** (Upload): Select a local file from your device
+    - **AI**: Generate an image using artificial intelligence
+  </Step>
+  
+  <Step title="Set Price and Unit">
+    Enter the price and select the appropriate unit type:
+    - Unidad (Unit)
+    - Kilo (kg)
+    - Gramos (g)
+    - Litro (Liter)
+    - Pack
+  </Step>
+  
+  <Step title="Add a Slogan (Optional)">
+    Enter a custom slogan or click the sparkle icon to generate one with AI.
+  </Step>
+  
+  <Step title="Configure Promotion Settings">
+    Check **ES UNA OFERTA** to mark as a promotion and select the type:
+    - Oferta Simple (General Promotion)
+    - Oferta del Día (Deal of the Day)
+    - Oferta Semanal (Weekly Deal)
+  </Step>
+  
+  <Step title="Save Product">
+    Click **Crear Producto** to add it to your catalog.
+  </Step>
+</Steps>
+
+## Product Data Structure
+
+```typescript types.ts
+export interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  unit: UnitType;
+  imageUrl?: string;
+  category: string;
+  isPromotion: boolean;
+  promotionType?: PromotionType;
+  slogan?: string;
+  primaryColor?: string; // Hex code for the ad theme
+}
+```
+
+## Image Input Methods
+
+Product images significantly enhance promotional displays. PromoMaster Pro offers three flexible input methods:
+
+### URL Method
+
+<Accordion title="Using Image URLs">
+Paste any publicly accessible image URL. Perfect for using product photos from your existing website or CDN.
+
+```tsx Management.tsx:164-166
+{imgSourceMode === 'url' && (
+  <input type="text" className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" 
+         placeholder="https://ejemplo.com/foto.jpg" 
+         value={productForm.imageUrl} 
+         onChange={e => setProductForm({...productForm, imageUrl: e.target.value})} />
+)}
+```
+</Accordion>
+
+### Upload Method
+
+<Accordion title="Uploading Local Files">
+Upload images directly from your device. Files are converted to Base64 format and embedded in the app data.
+
+```tsx Management.tsx:77-86
+const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setProductForm(prev => ({ ...prev, imageUrl: reader.result as string }));
+    };
+    reader.readAsDataURL(file);
+  }
+};
+```
+
+<Warning>
+Uploaded images are stored as Base64 strings in localStorage. Large images may impact performance.
+</Warning>
+</Accordion>
+
+### AI Generation
+
+<Accordion title="Generating Images with AI">
+Click **Generar con IA** to create product images using Google's Gemini AI model. The AI generates images based on the product name.
+
+```tsx Management.tsx:88-97
+const handleGenerateImage = async () => {
+  if (!productForm.name) {
+    alert("Introduce un nombre de producto para generar una imagen.");
+    return;
+  }
+  setIsGeneratingImage(true);
+  const imageUrl = await generateProductImage(productForm.name);
+  if (imageUrl) setProductForm(prev => ({ ...prev, imageUrl }));
+  setIsGeneratingImage(false);
+};
+```
+
+<Note>
+AI image generation requires a valid Gemini API key configured in the application.
+</Note>
+</Accordion>
+
+## AI-Powered Slogans
+
+Generate catchy, professional slogans automatically using AI:
+
+1. Enter a product name in the form
+2. Click the sparkle (✨) button next to the slogan field
+3. AI generates a contextual, promotional slogan
+
+```tsx Management.tsx:213-221
+<button type="button" onClick={async () => {
+  if(!productForm.name) return alert("Indica el nombre del producto.");
+  setIsGeneratingSlogan(true);
+  const s = await generateSlogan(productForm.name, productForm.description);
+  setProductForm(prev => ({ ...prev, slogan: s }));
+  setIsGeneratingSlogan(false);
+}} className="h-fit p-3 bg-amber-100 text-amber-600 rounded-xl hover:bg-amber-200 transition-colors">
+  {isGeneratingSlogan ? <Loader2 className="animate-spin" size={20} /> : <Sparkles size={20} />}
+</button>
+```
+
+## Promotion Configuration
+
+Mark products as promotions to add special visual indicators in Display Mode:
+
+<CardGroup cols={3}>
+  <Card title="General Promotion" icon="tag">
+    Standard promotion badge: **"¡OFERTA IMPERDIBLE!"**
+  </Card>
+  <Card title="Deal of the Day" icon="calendar-day">
+    Time-sensitive badge: **"¡OFERTA DEL DÍA!"**
+  </Card>
+  <Card title="Weekly Deal" icon="calendar-week">
+    Extended promotion: **"¡OFERTA DE LA SEMANA!"**
+  </Card>
+</CardGroup>
+
+### Promotion UI
+
+```tsx Management.tsx:225-243
+<div className="flex items-center gap-3 bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+  <input type="checkbox" id="manage-promo-check" className="w-5 h-5 accent-indigo-600 cursor-pointer" 
+         checked={productForm.isPromotion} 
+         onChange={e => setProductForm({...productForm, isPromotion: e.target.checked})} />
+  <label htmlFor="manage-promo-check" className="text-sm font-black text-indigo-900 cursor-pointer">ES UNA OFERTA</label>
+</div>
+
+{productForm.isPromotion && (
+  <div className="animate-fadeIn p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Tipo de Oferta</label>
+    <div className="flex flex-wrap gap-2">
+      {(['general', 'dia', 'semana'] as PromotionType[]).map(type => (
+        <button key={type} type="button" 
+                onClick={() => setProductForm({...productForm, promotionType: type})} 
+                className={`flex-1 py-2 px-3 rounded-lg text-[10px] font-black uppercase transition-all border 
+                           ${productForm.promotionType === type ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-white text-slate-500 border-slate-200 hover:border-indigo-300'}`}>
+          {type === 'general' ? 'Oferta Simple' : type === 'dia' ? 'Oferta del Día' : 'Oferta Semanal'}
+        </button>
+      ))}
+    </div>
+  </div>
+)}
+```
+
+## Product List View
+
+All products appear in a scrollable list on the right side of the screen:
+
+- **Product Image**: Thumbnail with promotion badge overlay (if applicable)
+- **Product Name**: Bold, large title
+- **Price & Unit**: Displayed in indigo color with the unit type
+- **Edit Button**: Pencil icon to modify the product
+- **Delete Button**: Trash icon to remove the product
+
+```tsx Management.tsx:257-278
+products.map(p => (
+  <div key={p.id} className="bg-white p-5 rounded-3xl border border-slate-200 flex items-center justify-between group hover:border-indigo-400 transition-all shadow-sm">
+    <div className="flex items-center gap-5">
+      <div className="w-16 h-16 rounded-2xl bg-slate-100 overflow-hidden relative border border-slate-100">
+        <img src={p.imageUrl || `https://picsum.photos/seed/${p.id}/200`} className="w-full h-full object-cover" />
+        {p.isPromotion && (
+          <div className="absolute top-0 left-0 bg-rose-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded-br-lg uppercase">
+            {p.promotionType === 'dia' ? 'Hoy' : p.promotionType === 'semana' ? 'Semana' : 'Oferta'}
+          </div>
+        )}
+      </div>
+      <div>
+        <h4 className="font-black text-slate-900 text-lg leading-tight">{p.name}</h4>
+        <p className="text-xs text-indigo-600 font-black uppercase tracking-widest mt-1">${p.price.toLocaleString()} / {p.unit}</p>
+      </div>
+    </div>
+    <div className="flex gap-2">
+      <button onClick={() => { setEditingProductId(p.id); setProductForm({...p}); setImgSourceMode('url'); }} 
+              className="p-3 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors"><Edit2 size={20} /></button>
+      <button onClick={() => onDeleteProduct(p.id)} 
+              className="p-3 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-colors"><Trash2 size={20} /></button>
+    </div>
+  </div>
+))
+```
+
+## Editing Products
+
+Click the edit icon on any product card to:
+
+1. Populate the form with existing product data
+2. Modify any field as needed
+3. Click **Actualizar Producto** to save changes
+
+The form button changes from "Crear Producto" to "Actualizar Producto" in edit mode.
+
+## Theme Colors
+
+Each product has a `primaryColor` property (defaults to `#4f46e5` - indigo) that controls:
+
+- Background glow effects in Display Mode
+- Badge and accent colors
+- Interactive element highlights
+
+<Note>
+Custom theme color selection is available in the product form. The color influences the entire aesthetic of the product's promotional display.
+</Note>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use High-Quality Images">
+    Product images are displayed at large sizes in Display Mode. Use images with at least 800x800px resolution for best results.
+  </Accordion>
+  
+  <Accordion title="Keep Names Concise">
+    Product names appear in very large typography. Names with 1-3 words work best: "Bife Angus Premium" rather than "Corte de Bife de Lomo de Angus Importado Premium".
+  </Accordion>
+  
+  <Accordion title="Write Compelling Slogans">
+    Slogans add emotional appeal. Use action words and benefits: "¡Frescura que se nota!" or "El sabor que mereces".
+  </Accordion>
+  
+  <Accordion title="Strategic Promotion Types">
+    Use "Deal of the Day" for urgency, "Weekly Deal" for extended campaigns, and "General Promotion" for evergreen offers.
+  </Accordion>
+</AccordionGroup>
+
+## Related Features
+
+<CardGroup cols={3}>
+  <Card title="Dashboard" icon="grid" href="/quickstart">
+    Add products to playlists
+  </Card>
+  <Card title="Playlist Creation" icon="list" href="/features/playlist-creation">
+    Build sequences with products
+  </Card>
+  <Card title="Display Mode" icon="tv" href="/features/display-mode">
+    See products in action
+  </Card>
+</CardGroup>

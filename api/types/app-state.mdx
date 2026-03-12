@@ -1,0 +1,328 @@
+---
+title: 'AppState'
+description: 'Global application state management'
+---
+
+## AppState Interface
+
+The `AppState` interface represents the complete application state for PromoMaster Pro, managing stores, products, announcements, and display configuration.
+
+```typescript
+export interface AppState {
+  stores: Store[];
+  products: Product[];
+  announcements: Announcement[];
+  currentStoreId?: string;
+  currentItems?: DisplayItem[];
+  displayDuration?: number;
+  view: 'dashboard' | 'display' | 'management';
+}
+```
+
+## Properties
+
+<ResponseField name="stores" type="Store[]" required>
+  Array of store locations. See [Store](/api/types/store) for details.
+</ResponseField>
+
+<ResponseField name="products" type="Product[]" required>
+  Array of product catalog items. See [Product](/api/types/product) for details.
+</ResponseField>
+
+<ResponseField name="announcements" type="Announcement[]" required>
+  Array of custom announcements. See [Announcement](/api/types/announcement) for details.
+</ResponseField>
+
+<ResponseField name="currentStoreId" type="string">
+  ID of the store currently being displayed. Used when `view` is "display".
+</ResponseField>
+
+<ResponseField name="currentItems" type="DisplayItem[]">
+  Ordered playlist of items (products and announcements) for display rotation.
+</ResponseField>
+
+<ResponseField name="displayDuration" type="number">
+  Duration in seconds for each item in the display rotation. Default: 5 seconds.
+</ResponseField>
+
+<ResponseField name="view" type="'dashboard' | 'display' | 'management'" required>
+  Current active view/screen in the application.
+</ResponseField>
+
+## DisplayItem Interface
+
+The `DisplayItem` interface represents a reference to either a product or announcement in a display playlist.
+
+```typescript
+export interface DisplayItem {
+  type: 'product' | 'announcement';
+  id: string;
+}
+```
+
+<ResponseField name="type" type="'product' | 'announcement'" required>
+  Discriminator indicating whether this item references a product or announcement.
+</ResponseField>
+
+<ResponseField name="id" type="string" required>
+  The ID of the referenced product or announcement.
+</ResponseField>
+
+## View Types
+
+<ResponseField name="dashboard" type="literal">
+  Main control panel for creating playlists and launching displays
+</ResponseField>
+
+<ResponseField name="display" type="literal">
+  Full-screen advertisement display mode
+</ResponseField>
+
+<ResponseField name="management" type="literal">
+  Advanced management interface for stores, products, and announcements
+</ResponseField>
+
+## Usage Examples
+
+### Initial State
+
+```typescript
+const [state, setState] = useState<AppState>(() => {
+  try {
+    const saved = localStorage.getItem('promomaster_data_v2');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return {
+        ...parsed,
+        announcements: parsed.announcements || [],
+        view: 'dashboard'
+      };
+    }
+  } catch (e) {
+    console.error("Failed to load state from storage", e);
+  }
+  return {
+    stores: [
+      {
+        id: '1',
+        name: 'Sucursal Central',
+        address: 'Av. Libertador 1234',
+        logoColor: 'bg-blue-600'
+      }
+    ],
+    products: [],
+    announcements: [],
+    displayDuration: 5,
+    view: 'dashboard'
+  };
+});
+```
+
+### Persisting State
+
+```typescript
+useEffect(() => {
+  localStorage.setItem('promomaster_data_v2', JSON.stringify(state));
+}, [state]);
+```
+
+### Changing Views
+
+```typescript
+const setView = (view: AppState['view']) => {
+  setState(prev => ({ ...prev, view }));
+};
+
+// Usage
+setView('dashboard');
+setView('management');
+setView('display');
+```
+
+### Starting a Display
+
+```typescript
+const startDisplay = (
+  items: DisplayItem[],
+  storeId: string,
+  duration: number
+) => {
+  setState(prev => ({
+    ...prev,
+    currentItems: items,
+    currentStoreId: storeId,
+    displayDuration: duration,
+    view: 'display'
+  }));
+};
+
+// Usage
+startDisplay(
+  [
+    { type: 'product', id: 'prod-123' },
+    { type: 'announcement', id: 'ann-456' }
+  ],
+  'store-1',
+  5
+);
+```
+
+### Creating a Display Playlist
+
+```typescript
+const [playlist, setPlaylist] = useState<DisplayItem[]>([]);
+
+const addToPlaylist = (item: DisplayItem) => {
+  setPlaylist(prev => [...prev, item]);
+};
+
+// Add a product
+addToPlaylist({ type: 'product', id: product.id });
+
+// Add an announcement
+addToPlaylist({ type: 'announcement', id: announcement.id });
+
+// Add all products
+const allProducts: DisplayItem[] = products.map(p => ({
+  type: 'product',
+  id: p.id
+}));
+```
+
+### Resolving Display Items
+
+```typescript
+const resolvedItems = (state.currentItems || []).map(item => {
+  if (item.type === 'product') {
+    return state.products.find(p => p.id === item.id);
+  }
+  return state.announcements.find(a => a.id === item.id);
+}).filter(Boolean) as (Product | Announcement)[];
+
+const store = state.stores.find(s => s.id === state.currentStoreId);
+
+if (resolvedItems.length === 0 || !store) {
+  setView('dashboard');
+  return null;
+}
+```
+
+### CRUD Operations
+
+```typescript
+// Add Store
+const addStore = (store: Omit<Store, 'id'>) => {
+  const newStore = { ...store, id: crypto.randomUUID() };
+  setState(prev => ({
+    ...prev,
+    stores: [...prev.stores, newStore]
+  }));
+};
+
+// Update Product
+const updateProduct = (updatedProduct: Product) => {
+  setState(prev => ({
+    ...prev,
+    products: prev.products.map(p =>
+      p.id === updatedProduct.id ? updatedProduct : p
+    )
+  }));
+};
+
+// Delete Announcement
+const deleteAnnouncement = (id: string) => {
+  setState(prev => ({
+    ...prev,
+    announcements: prev.announcements.filter(a => a.id !== id)
+  }));
+};
+```
+
+### Playlist Management
+
+```typescript
+// Remove item from playlist
+const removeFromPlaylist = (index: number) => {
+  setPlaylist(prev => prev.filter((_, i) => i !== index));
+};
+
+// Reorder playlist items
+const movePlaylistItem = (index: number, direction: 'up' | 'down') => {
+  const newPlaylist = [...playlist];
+  const targetIndex = direction === 'up' ? index - 1 : index + 1;
+  if (targetIndex < 0 || targetIndex >= newPlaylist.length) return;
+  [newPlaylist[index], newPlaylist[targetIndex]] = 
+    [newPlaylist[targetIndex], newPlaylist[index]];
+  setPlaylist(newPlaylist);
+};
+
+// Clear playlist
+const clearPlaylist = () => setPlaylist([]);
+```
+
+### Type Guards for Display Items
+
+```typescript
+const isProduct = 'price' in currentItem;
+
+if (isProduct) {
+  const product = currentItem as Product;
+  console.log(product.price);
+} else {
+  const announcement = currentItem as Announcement;
+  console.log(announcement.message);
+}
+```
+
+### Conditional Rendering Based on View
+
+```typescript
+if (state.view === 'display') {
+  return <AdDisplay items={resolvedItems} store={store} duration={duration} />;
+}
+
+return (
+  <div>
+    {state.view === 'dashboard' && (
+      <Dashboard
+        products={state.products}
+        announcements={state.announcements}
+        stores={state.stores}
+        onStartDisplay={startDisplay}
+        defaultDuration={state.displayDuration || 5}
+      />
+    )}
+    {state.view === 'management' && (
+      <Management
+        stores={state.stores}
+        products={state.products}
+        announcements={state.announcements}
+        onAddStore={addStore}
+        onUpdateStore={updateStore}
+        onDeleteStore={deleteStore}
+        onAddProduct={addProduct}
+        onUpdateProduct={updateProduct}
+        onDeleteProduct={deleteProduct}
+        onAddAnnouncement={addAnnouncement}
+        onUpdateAnnouncement={updateAnnouncement}
+        onDeleteAnnouncement={deleteAnnouncement}
+      />
+    )}
+  </div>
+);
+```
+
+## Related Types
+
+- [Store](/api/types/store) - Store configuration objects
+- [Product](/api/types/product) - Product catalog items
+- [Announcement](/api/types/announcement) - Custom announcement displays
+
+## Notes
+
+- State is persisted to localStorage under the key `promomaster_data_v2`
+- The `view` property controls which component is rendered
+- Display items are references (type + id) that are resolved at display time
+- Default display duration is 5 seconds if not specified
+- The application always initializes with at least one default store
+- Missing announcements in legacy data are automatically initialized to empty arrays

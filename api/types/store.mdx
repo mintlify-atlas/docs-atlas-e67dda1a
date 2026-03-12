@@ -1,0 +1,104 @@
+---
+title: 'Store'
+description: 'Store configuration and branding information'
+---
+
+## Store Interface
+
+The `Store` interface represents a retail location with branding configuration for PromoMaster Pro displays.
+
+```typescript
+export interface Store {
+  id: string;
+  name: string;
+  address: string;
+  logoColor: string;
+}
+```
+
+## Properties
+
+<ResponseField name="id" type="string" required>
+  Unique identifier for the store. Auto-generated using `crypto.randomUUID()`.
+</ResponseField>
+
+<ResponseField name="name" type="string" required>
+  Display name of the store location (e.g., "Sucursal Central").
+</ResponseField>
+
+<ResponseField name="address" type="string" required>
+  Physical address of the store location displayed in advertisements.
+</ResponseField>
+
+<ResponseField name="logoColor" type="string" required>
+  Tailwind CSS background color class for store branding (e.g., "bg-blue-600", "bg-indigo-600").
+</ResponseField>
+
+## Usage Examples
+
+### Creating a Store
+
+```typescript
+const addStore = (store: Omit<Store, 'id'>) => {
+  const newStore = { ...store, id: crypto.randomUUID() };
+  setState(prev => ({ ...prev, stores: [...prev.stores, newStore] }));
+};
+
+// Usage
+addStore({
+  name: 'Sucursal Central',
+  address: 'Av. Libertador 1234',
+  logoColor: 'bg-blue-600'
+});
+```
+
+### Default Store Configuration
+
+```typescript
+const defaultStore: Store = {
+  id: '1',
+  name: 'Sucursal Central',
+  address: 'Av. Libertador 1234',
+  logoColor: 'bg-blue-600'
+};
+```
+
+### Updating a Store
+
+```typescript
+const updateStore = (updatedStore: Store) => {
+  setState(prev => ({
+    ...prev,
+    stores: prev.stores.map(s => 
+      s.id === updatedStore.id ? updatedStore : s
+    )
+  }));
+};
+```
+
+### Store Display in Ads
+
+```typescript
+// Store information is displayed in product advertisements
+const store = stores.find(s => s.id === currentStoreId);
+
+return (
+  <div className="store-badge">
+    <span className="store-name">{store.name}</span>
+    <span className="store-address">{store.address}</span>
+  </div>
+);
+```
+
+## Related Types
+
+- [AppState](/api/types/app-state) - Contains the stores array
+- [Product](/api/types/product) - Products are associated with stores
+- [Announcement](/api/types/announcement) - Announcements are displayed for stores
+
+## Notes
+
+- Store IDs are automatically generated and should not be manually set
+- The `logoColor` property uses Tailwind CSS classes for consistent branding
+- Each store can have multiple products and announcements
+- Store information is prominently displayed in advertisement displays

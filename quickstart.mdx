@@ -1,80 +1,221 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: 'Quickstart Guide'
+description: 'Get PromoMaster Pro up and running in under 5 minutes'
+icon: 'rocket'
 ---
 
-## Get started in three steps
+PromoMaster Pro is a zero-configuration digital signage application that runs directly in your browser. This guide will walk you through creating your first promotional display from scratch.
 
-Get your documentation site running locally and make your first customization.
+## Getting Started
 
-### Step 1: Set up your local environment
-
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
+<Steps>
+  <Step title="Open the Application">
+    Simply open `index.html` in any modern web browser (Chrome, Firefox, Edge, or Safari recommended).
     
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
+    ```bash Terminal
+    # Navigate to the source directory
+    cd ~/workspace/source
     
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
+    # Open in your default browser (macOS)
+    open index.html
     
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+    # Or for Linux
+    xdg-open index.html
+    
+    # Or for Windows
+    start index.html
+    ```
+    
+    You'll see the PromoMaster dashboard with a dark sidebar navigation and the main control panel.
+    
+    <Note>
+      All data is automatically saved to your browser's `localStorage` using the key `promomaster_data_v2`. You can refresh the page without losing your work.
+    </Note>
+  </Step>
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+  <Step title="Create Your First Store">
+    Before creating products, you need at least one store location.
+    
+    1. Click **"Gestión Total"** in the sidebar navigation
+    2. Select the **"Sucursales"** tab at the top
+    3. Fill in the store form:
+       - **Name**: e.g., "Downtown Location"
+       - **Address**: e.g., "123 Main Street"
+    4. Click **"Guardar Local"** to save
+    
+    The application comes with a default store called "Sucursal Central" at "Av. Libertador 1234", which you can modify or delete.
+    
+    ```tsx App.tsx:32-35
+    stores: [
+      { id: '1', name: 'Sucursal Central', address: 'Av. Libertador 1234', logoColor: 'bg-blue-600' }
+    ],
+    ```
+  </Step>
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+  <Step title="Add Your First Product">
+    Now let's create a product to display.
+    
+    1. Stay in **"Gestión Total"** and click the **"Productos"** tab
+    2. In the left form panel, fill in:
+       - **Product Name**: e.g., "Fresh Organic Apples"
+       - **Price**: e.g., 299
+       - **Unit**: Select from dropdown (unidad, kg, g, litro, pack)
+       - **Category**: e.g., "Fruits"
+    3. Choose an image source:
+       - **URL**: Paste an image link
+       - **Upload**: Click to upload from your computer
+       - **AI**: Generate with Google Gemini (requires API key)
+    4. Optionally add a promotional slogan
+    5. Check **"ES UNA OFERTA"** if this is a promotion
+    6. Click **"Crear Producto"**
+    
+    Your product will appear in the right panel with a thumbnail preview.
+    
+    <Tip>
+      Products support promotional types: **Oferta Simple**, **Oferta del Día**, or **Oferta Semanal**. These appear as badges on the display view.
+    </Tip>
+  </Step>
 
-### Step 3: Go live
+  <Step title="Create a Display Playlist">
+    Navigate to the **"Panel de Control"** from the sidebar.
+    
+    1. You'll see three tabs: **Productos**, **Avisos Libres**, and **Mi Secuencia**
+    2. Browse your products in the **Productos** tab
+    3. Click the **+** button on any product card to add it to your playlist
+    4. Switch to the **"Mi Secuencia"** tab to see your queue
+    5. Reorder items using the up/down arrow buttons that appear on hover
+    
+    ```tsx Dashboard.tsx:31-33
+    const addToPlaylist = (item: DisplayItem) => {
+      setPlaylist(prev => [...prev, item]);
+    };
+    ```
+    
+    <Info>
+      You can mix products and announcements in any order. The **"Añadir Todo a Secuencia"** button adds all items at once.
+    </Info>
+  </Step>
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+  <Step title="Configure Display Settings">
+    Before starting transmission, set your preferences:
+    
+    - **Duration**: Adjust seconds per slide (default: 5 seconds)
+    - **Store**: Select which location to display in the header
+    
+    These controls are in the top-right of the **"Panel de Control"**.
+    
+    ```tsx Dashboard.tsx:74-83
+    <div className="flex items-center gap-2 bg-white border border-slate-200 px-3 py-1.5 rounded-xl shadow-sm">
+      <Clock size={16} className="text-slate-400" />
+      <span className="text-xs font-bold text-slate-500 uppercase">Segundos</span>
+      <input 
+        type="number" 
+        min="1" 
+        value={duration}
+        onChange={(e) => setDuration(Math.max(1, parseInt(e.target.value) || 1))}
+        className="w-12 text-center font-bold text-indigo-600 outline-none"
+      />
+    </div>
+    ```
+  </Step>
 
-## Next steps
+  <Step title="Launch Your Display">
+    Ready to go live!
+    
+    1. In the **"Mi Secuencia"** tab, click **"Iniciar Transmisión"**
+    2. The app enters fullscreen display mode
+    3. Your products rotate automatically at the configured interval
+    4. Press **ESC** or click the exit button to return to the dashboard
+    
+    The display includes:
+    - Full-screen product imagery
+    - Price and unit information
+    - Store branding in the header
+    - Animated ticker at the bottom with promotional messages
+    - Smooth fade transitions between slides
+    
+    ```tsx App.tsx:102-110
+    const startDisplay = (items: DisplayItem[], storeId: string, duration: number) => {
+      setState(prev => ({
+        ...prev,
+        currentItems: items,
+        currentStoreId: storeId,
+        displayDuration: duration,
+        view: 'display'
+      }));
+    };
+    ```
+  </Step>
+</Steps>
 
-Now that you have your docs running, explore these key features:
+## Quick Launch Options
+
+PromoMaster Pro offers two ways to start a display:
 
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Playlist Mode" icon="list-ol">
+    Build a custom sequence with the **"Mi Secuencia"** playlist. Mix products and announcements, reorder them, and launch the full rotation.
+  </Card>
+  
+  <Card title="Instant Launch" icon="play">
+    Click the play button on any individual product or announcement card to display it immediately without building a playlist.
+  </Card>
 </CardGroup>
 
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>
+## Adding Announcements (Optional)
+
+For non-product content like store hours or legal notices:
+
+1. Go to **"Gestión Total"** → **"Avisos Libres"**
+2. Create a custom announcement with:
+   - Title (internal reference)
+   - Message content
+   - Font family (Bebas, Inter, Serif, Mono)
+   - Font size (20-200px)
+   - Background and text colors
+   - Text alignment
+3. Preview updates in real-time on the right panel
+4. Save and add to your display playlist
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Installation Details" icon="download" href="/installation">
+    Learn about browser requirements and optional AI features
+  </Card>
+  
+  <Card title="Customization" icon="palette" href="/guides/customizing-display">
+    Customize colors, fonts, and display themes
+  </Card>
+  
+  <Card title="AI Features" icon="sparkles" href="/ai/overview">
+    Set up Google Gemini for automatic image generation and slogan creation
+  </Card>
+  
+  <Card title="Display Mode" icon="tv" href="/features/display-mode">
+    Advanced display settings and kiosk mode setup
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="My data disappeared after closing the browser">
+    PromoMaster Pro saves data to `localStorage`, which is specific to each browser and domain. Make sure you're opening the same `index.html` file from the same location.
+  </Accordion>
+
+  <Accordion title="Products aren't appearing in the playlist">
+    Check that you've clicked the **+** button to add items. The playlist is in the **"Mi Secuencia"** tab, separate from the browsing tabs.
+  </Accordion>
+
+  <Accordion title="Display won't start">
+    Ensure you have:
+    - At least one item in your playlist
+    - A store selected in the dropdown
+    - A duration value of 1 or higher
+  </Accordion>
+  
+  <Accordion title="AI features aren't working">
+    AI image generation and slogan suggestions require a Google Gemini API key configured as an environment variable. See the [Installation guide](/installation) for setup instructions.
+  </Accordion>
+</AccordionGroup>

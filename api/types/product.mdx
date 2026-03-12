@@ -1,0 +1,228 @@
+---
+title: 'Product'
+description: 'Product catalog items with promotion support'
+---
+
+## Product Interface
+
+The `Product` interface represents a retail product with pricing, categorization, and promotional capabilities.
+
+```typescript
+export interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  unit: UnitType;
+  imageUrl?: string;
+  category: string;
+  isPromotion: boolean;
+  promotionType?: PromotionType;
+  slogan?: string;
+  primaryColor?: string; // Hex code for the ad theme
+}
+```
+
+## Properties
+
+<ResponseField name="id" type="string" required>
+  Unique identifier for the product. Auto-generated using `crypto.randomUUID()`.
+</ResponseField>
+
+<ResponseField name="name" type="string" required>
+  Product display name shown in ads and management interface.
+</ResponseField>
+
+<ResponseField name="description" type="string" required>
+  Detailed product description (used for AI slogan generation).
+</ResponseField>
+
+<ResponseField name="price" type="number" required>
+  Product price as a numeric value. Displayed with locale-specific formatting.
+</ResponseField>
+
+<ResponseField name="unit" type="UnitType" required>
+  Measurement unit for the product. See [UnitType](#unittype) for available options.
+</ResponseField>
+
+<ResponseField name="imageUrl" type="string">
+  Optional product image URL. Supports external URLs or base64-encoded images. Falls back to placeholder if not provided.
+</ResponseField>
+
+<ResponseField name="category" type="string" required>
+  Product category for organization and filtering (e.g., "Carnes", "Verduras").
+</ResponseField>
+
+<ResponseField name="isPromotion" type="boolean" required>
+  Flag indicating if the product is currently on promotion.
+</ResponseField>
+
+<ResponseField name="promotionType" type="PromotionType">
+  Type of promotion when `isPromotion` is true. See [PromotionType](#promotiontype).
+</ResponseField>
+
+<ResponseField name="slogan" type="string">
+  Marketing slogan displayed in advertisements. Can be AI-generated or manually entered.
+</ResponseField>
+
+<ResponseField name="primaryColor" type="string">
+  Hex color code for advertisement theming (e.g., "#4f46e5"). Defaults to "#4f46e5" if not specified.
+</ResponseField>
+
+## UnitType
+
+Supported measurement units for products:
+
+```typescript
+export type UnitType = 'unidad' | 'kg' | 'g' | 'litro' | 'pack';
+```
+
+<ResponseField name="unidad" type="literal">
+  Individual unit (default)
+</ResponseField>
+
+<ResponseField name="kg" type="literal">
+  Kilogram
+</ResponseField>
+
+<ResponseField name="g" type="literal">
+  Grams
+</ResponseField>
+
+<ResponseField name="litro" type="literal">
+  Liter
+</ResponseField>
+
+<ResponseField name="pack" type="literal">
+  Package or pack
+</ResponseField>
+
+## PromotionType
+
+Types of promotional campaigns:
+
+```typescript
+export type PromotionType = 'dia' | 'semana' | 'general';
+```
+
+<ResponseField name="dia" type="literal">
+  Daily offer - Displays as "¡OFERTA DEL DÍA!"
+</ResponseField>
+
+<ResponseField name="semana" type="literal">
+  Weekly offer - Displays as "¡OFERTA DE LA SEMANA!"
+</ResponseField>
+
+<ResponseField name="general" type="literal">
+  General promotion - Displays as "¡OFERTA IMPERDIBLE!"
+</ResponseField>
+
+## Usage Examples
+
+### Creating a Product
+
+```typescript
+const addProduct = (product: Omit<Product, 'id'>) => {
+  const newProduct = { ...product, id: crypto.randomUUID() };
+  setState(prev => ({ ...prev, products: [...prev.products, newProduct] }));
+};
+
+// Usage
+addProduct({
+  name: 'Asado Premium',
+  description: 'Corte selecto de res',
+  price: 2500,
+  unit: 'kg',
+  category: 'Carnes',
+  isPromotion: true,
+  promotionType: 'dia',
+  slogan: '¡El mejor corte al mejor precio!',
+  primaryColor: '#dc2626'
+});
+```
+
+### Initial Product State
+
+```typescript
+const INITIAL_PRODUCT_STATE = {
+  name: '',
+  description: '',
+  price: 0,
+  unit: 'unidad' as UnitType,
+  category: '',
+  isPromotion: false,
+  promotionType: 'general' as PromotionType,
+  slogan: '',
+  imageUrl: '',
+  primaryColor: '#4f46e5'
+};
+```
+
+### Product Filtering
+
+```typescript
+const filteredProducts = products.filter(p => 
+  p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+  p.category.toLowerCase().includes(searchTerm.toLowerCase())
+);
+```
+
+### Product Display with Type Checking
+
+```typescript
+const isProduct = 'price' in item;
+if (isProduct) {
+  const product = item as Product;
+  return (
+    <div>
+      <h2>{product.name}</h2>
+      <p>${product.price.toLocaleString()} / {product.unit}</p>
+      {product.isPromotion && (
+        <span>{getPromoLabel(product.promotionType)}</span>
+      )}
+    </div>
+  );
+}
+```
+
+### AI-Generated Slogan
+
+```typescript
+const handleGenerateSlogan = async () => {
+  if (!productForm.name) return;
+  setIsGeneratingSlogan(true);
+  const slogan = await generateSlogan(
+    productForm.name,
+    productForm.description
+  );
+  setProductForm(prev => ({ ...prev, slogan }));
+  setIsGeneratingSlogan(false);
+};
+```
+
+### Image URL Handling
+
+```typescript
+// Supports external URLs
+imageUrl: 'https://example.com/product.jpg'
+
+// Supports base64-encoded images
+imageUrl: 'data:image/jpeg;base64,...'
+
+// Fallback to placeholder
+const src = product.imageUrl || `https://picsum.photos/seed/${product.id}/400`;
+```
+
+## Related Types
+
+- [DisplayItem](/api/types/app-state#displayitem) - References products in playlists
+- [AppState](/api/types/app-state) - Contains the products array
+- [Store](/api/types/store) - Products are associated with stores
+
+## Notes
+
+- Product IDs are automatically generated using `crypto.randomUUID()`
+- Price values should be numeric; formatting is handled by the display components
+- The `primaryColor` property affects the entire advertisement theme
+- Products with `isPromotion: true` display animated promotion badges
+- Image URLs can be external links, uploaded files (base64), or AI-generated

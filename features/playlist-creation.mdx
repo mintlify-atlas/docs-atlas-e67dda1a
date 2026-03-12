@@ -1,0 +1,467 @@
+---
+title: 'Playlist Creation'
+description: 'Build custom sequences mixing products and announcements for display'
+icon: 'list-ol'
+---
+
+## Overview
+
+Playlist Creation is the heart of PromoMaster Pro's Dashboard. Build custom sequences by mixing products and announcements, control the order they appear, set duration timing, and launch synchronized displays across your store network.
+
+<Info>
+Playlists are temporary and session-based. They're designed for real-time content curation rather than saved templates.
+</Info>
+
+## Accessing the Playlist Builder
+
+Navigate to **Panel de Control** (Dashboard) from the sidebar. The playlist builder is accessible via the **Mi Secuencia** (My Sequence) tab.
+
+## Building a Playlist
+
+<Steps>
+  <Step title="Browse Content">
+    Switch between the **Productos** and **Avisos Libres** tabs to see available items.
+  </Step>
+  
+  <Step title="Add Items">
+    Click the **+** button on any product or announcement card to add it to your playlist.
+  </Step>
+  
+  <Step title="Review Sequence">
+    Navigate to the **Mi Secuencia** tab to see all added items in order.
+  </Step>
+  
+  <Step title="Reorder Items">
+    Use the up/down arrow buttons to adjust the display sequence.
+  </Step>
+  
+  <Step title="Configure Settings">
+    - Select your target store from the dropdown
+    - Set the duration (in seconds) for each slide
+  </Step>
+  
+  <Step title="Launch Display">
+    Click **Iniciar Transmisión** to start the full-screen promotional display.
+  </Step>
+</Steps>
+
+## Dashboard Interface
+
+The Dashboard provides a comprehensive content management interface:
+
+```tsx Dashboard.tsx:66-98
+<header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+  <div>
+    <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Panel de Control</h2>
+    <p className="text-slate-500">Crea tu secuencia de propaganda mezclada.</p>
+  </div>
+
+  <div className="flex flex-wrap items-center gap-4">
+    <div className="flex items-center gap-2 bg-white border border-slate-200 px-3 py-1.5 rounded-xl shadow-sm">
+      <Clock size={16} className="text-slate-400" />
+      <span className="text-xs font-bold text-slate-500 uppercase">Segundos</span>
+      <input 
+        type="number" 
+        min="1" 
+        value={duration}
+        onChange={(e) => setDuration(Math.max(1, parseInt(e.target.value) || 1))}
+        className="w-12 text-center font-bold text-indigo-600 outline-none"
+      />
+    </div>
+
+    <div className="flex items-center gap-3">
+      <label className="text-sm font-bold text-slate-700">Local:</label>
+      <select 
+        value={selectedStore}
+        onChange={(e) => setSelectedStore(e.target.value)}
+        className="bg-white border-2 border-slate-200 rounded-xl px-4 py-2 focus:border-indigo-500 outline-none font-semibold text-slate-700 shadow-sm"
+      >
+        {stores.map(s => (
+          <option key={s.id} value={s.id}>{s.name}</option>
+        ))}
+      </select>
+    </div>
+  </div>
+</header>
+```
+
+## Tab Navigation
+
+Three main tabs organize the workflow:
+
+```tsx Dashboard.tsx:100-125
+<div className="flex flex-wrap gap-2 bg-slate-200/50 p-1.5 rounded-2xl w-fit">
+  <button 
+    onClick={() => setActiveTab('products')}
+    className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all 
+               ${activeTab === 'products' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:bg-white/50'}`}
+  >
+    <Tag size={18} /> Productos
+  </button>
+  <button 
+    onClick={() => setActiveTab('announcements')}
+    className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all 
+               ${activeTab === 'announcements' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:bg-white/50'}`}
+  >
+    <Megaphone size={18} /> Avisos Libres
+  </button>
+  <button 
+    onClick={() => setActiveTab('playlist')}
+    className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all relative 
+               ${activeTab === 'playlist' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:bg-white/50'}`}
+  >
+    <ListOrdered size={18} /> Mi Secuencia
+    {playlist.length > 0 && (
+      <span className="absolute -top-2 -right-2 w-6 h-6 bg-rose-500 text-white text-[10px] flex items-center justify-center rounded-full font-black animate-bounce shadow-lg">
+        {playlist.length}
+      </span>
+    )}
+  </button>
+</div>
+```
+
+<CardGroup cols={3}>
+  <Card title="Productos Tab" icon="box">
+    Browse all products in a responsive grid. Each card shows image, name, price, and quick-add buttons.
+  </Card>
+  <Card title="Avisos Libres Tab" icon="megaphone">
+    View all announcements with preview badges. Displays font info and message snippets.
+  </Card>
+  <Card title="Mi Secuencia Tab" icon="list-ol">
+    Manage your playlist. Shows item order, reorder controls, and launch button. Badge displays item count.
+  </Card>
+</CardGroup>
+
+## Adding Items to Playlist
+
+Multiple methods for adding content:
+
+### Individual Item Addition
+
+```tsx Dashboard.tsx:31-33
+const addToPlaylist = (item: DisplayItem) => {
+  setPlaylist(prev => [...prev, item]);
+};
+```
+
+Click the **+** icon on any product or announcement card:
+
+```tsx Dashboard.tsx:235-241
+<button 
+  onClick={() => addToPlaylist({ type: 'product', id: product.id })}
+  className="p-3 bg-slate-50 text-slate-900 hover:bg-indigo-600 hover:text-white rounded-xl transition-all border border-slate-100"
+  title="Añadir a secuencia"
+>
+  <Plus size={20} />
+</button>
+```
+
+### Bulk Addition
+
+Add all products and announcements at once:
+
+```tsx Dashboard.tsx:57-62
+const addAllToPlaylist = () => {
+  const allProducts: DisplayItem[] = products.map(p => ({ type: 'product', id: p.id }));
+  const allAnns: DisplayItem[] = announcements.map(a => ({ type: 'announcement', id: a.id }));
+  setPlaylist([...allProducts, ...allAnns]);
+  setActiveTab('playlist');
+};
+```
+
+Click **Añadir Todo a Secuencia** button in the toolbar:
+
+```tsx Dashboard.tsx:207-209
+<button onClick={addAllToPlaylist} className="flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold hover:bg-indigo-600 transition-all whitespace-nowrap">
+  <Plus size={18} /> Añadir Todo a Secuencia
+</button>
+```
+
+## Playlist Management View
+
+The **Mi Secuencia** tab shows your complete playlist:
+
+```tsx Dashboard.tsx:127-193
+{activeTab === 'playlist' ? (
+  <div className="space-y-6 animate-fadeIn">
+    <div className="bg-white rounded-[2rem] border border-slate-200 shadow-xl overflow-hidden">
+      <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <div>
+          <h3 className="text-xl font-black text-slate-900">Configuración de Secuencia</h3>
+          <p className="text-sm text-slate-500">Ordena cómo aparecerán los productos y avisos en pantalla.</p>
+        </div>
+        <div className="flex gap-3">
+          <button 
+            onClick={() => setPlaylist([])}
+            className="px-6 py-3 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-100 transition-all text-sm"
+          >
+            Vaciar
+          </button>
+          <button 
+            disabled={playlist.length === 0}
+            onClick={handleLaunchAllMixed}
+            className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black text-sm uppercase tracking-widest shadow-xl shadow-indigo-200 disabled:opacity-50 transition-all active:scale-95 flex items-center gap-3"
+          >
+            <MonitorPlay size={20} /> Iniciar Transmisión
+          </button>
+        </div>
+      </div>
+
+      <div className="p-6 space-y-3 max-h-[60vh] overflow-y-auto bg-white">
+        {playlist.length === 0 ? (
+          <div className="py-20 text-center space-y-4">
+            <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-300">
+              <ListOrdered size={40} />
+            </div>
+            <p className="text-slate-400 font-medium">Tu secuencia está vacía. Añade items desde las otras pestañas.</p>
+            <button onClick={addAllToPlaylist} className="text-indigo-600 font-bold hover:underline">Añadir todo el catálogo</button>
+          </div>
+        ) : (
+          // Playlist items render here
+        )}
+      </div>
+    </div>
+  </div>
+)}
+```
+
+### Playlist Item Cards
+
+Each item in the playlist displays:
+
+```tsx Dashboard.tsx:162-189
+playlist.map((item, index) => {
+  const data = item.type === 'product' ? products.find(p => p.id === item.id) : announcements.find(a => a.id === item.id);
+  if (!data) return null;
+
+  return (
+    <div key={`${item.id}-${index}`} className="flex items-center gap-4 p-4 bg-slate-50 hover:bg-white rounded-2xl border border-slate-100 hover:border-indigo-200 hover:shadow-md transition-all group">
+      <div className="text-xs font-black text-slate-300 w-6">{index + 1}</div>
+      <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white shrink-0 overflow-hidden ${item.type === 'product' ? 'bg-slate-100' : ''}`} 
+           style={{ backgroundColor: item.type === 'announcement' ? (data as Announcement).backgroundColor : undefined }}>
+        {item.type === 'product' ? (
+          <img src={(data as Product).imageUrl || `https://picsum.photos/seed/${data.id}/100`} className="w-full h-full object-cover" />
+        ) : <Megaphone size={18} />}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="font-bold text-slate-900 truncate">
+          {item.type === 'product' ? (data as Product).name : (data as Announcement).title}
+        </div>
+        <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+          {item.type === 'product' ? 'Producto' : 'Aviso Libre'}
+        </div>
+      </div>
+      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button onClick={() => movePlaylistItem(index, 'up')} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-indigo-600 transition-all"><ArrowUp size={16} /></button>
+        <button onClick={() => movePlaylistItem(index, 'down')} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-indigo-600 transition-all"><ArrowDown size={16} /></button>
+        <button onClick={() => removeFromPlaylist(index)} className="p-2 hover:bg-rose-50 rounded-lg text-slate-400 hover:text-rose-600 transition-all ml-2"><X size={16} /></button>
+      </div>
+    </div>
+  );
+})
+```
+
+## Reordering Items
+
+Move items up or down in the sequence:
+
+```tsx Dashboard.tsx:39-45
+const movePlaylistItem = (index: number, direction: 'up' | 'down') => {
+  const newPlaylist = [...playlist];
+  const targetIndex = direction === 'up' ? index - 1 : index + 1;
+  if (targetIndex < 0 || targetIndex >= newPlaylist.length) return;
+  [newPlaylist[index], newPlaylist[targetIndex]] = [newPlaylist[targetIndex], newPlaylist[index]];
+  setPlaylist(newPlaylist);
+};
+```
+
+<Accordion title="Reordering Strategies">
+- **Front-load promotions**: Put time-sensitive deals first
+- **Alternate content types**: Mix products and announcements for variety
+- **Strategic pacing**: Place high-value items after attention-grabbing content
+- **End strong**: Put compelling offers at the end to encourage action
+</Accordion>
+
+## Removing Items
+
+Remove individual items without affecting the rest of the sequence:
+
+```tsx Dashboard.tsx:35-37
+const removeFromPlaylist = (index: number) => {
+  setPlaylist(prev => prev.filter((_, i) => i !== index));
+};
+```
+
+Click the **X** button on any playlist item card.
+
+## Duration Control
+
+Set how long each slide displays (in seconds):
+
+```tsx Dashboard.tsx:74-83
+<div className="flex items-center gap-2 bg-white border border-slate-200 px-3 py-1.5 rounded-xl shadow-sm">
+  <Clock size={16} className="text-slate-400" />
+  <span className="text-xs font-bold text-slate-500 uppercase">Segundos</span>
+  <input 
+    type="number" 
+    min="1" 
+    value={duration}
+    onChange={(e) => setDuration(Math.max(1, parseInt(e.target.value) || 1))}
+    className="w-12 text-center font-bold text-indigo-600 outline-none"
+  />
+</div>
+```
+
+<Note>
+Duration applies uniformly to all items in the playlist. If you need different durations, launch separate display sessions.
+</Note>
+
+### Recommended Duration Settings
+
+- **3-5 seconds**: Fast-paced, high-energy for busy retail environments
+- **5-8 seconds**: Balanced timing for mixed content (default: 5)
+- **8-12 seconds**: Slower pace for detailed products or complex announcements
+- **15+ seconds**: Very long-form content or waiting room displays
+
+## Quick Launch Feature
+
+Launch individual items immediately without adding to playlist:
+
+```tsx Dashboard.tsx:53-55
+const handleLaunchItemNow = (item: DisplayItem) => {
+  onStartDisplay([item], selectedStore, duration);
+};
+```
+
+Hover over any product or announcement card and click the **Play** button:
+
+```tsx Dashboard.tsx:219-225
+<button 
+  onClick={() => handleLaunchItemNow({ type: 'product', id: product.id })}
+  className="p-3 bg-indigo-600 text-white rounded-full shadow-xl hover:scale-110 active:scale-95 transition-all"
+  title="Lanzar Ahora"
+>
+  <Play size={20} fill="currentColor" />
+</button>
+```
+
+<Info>
+Quick Launch is perfect for testing individual items or displaying urgent promotions without building a full playlist.
+</Info>
+
+## Launching Display Mode
+
+Start the full-screen promotional display:
+
+```tsx Dashboard.tsx:47-51
+const handleLaunchAllMixed = () => {
+  if (playlist.length > 0 && selectedStore) {
+    onStartDisplay(playlist, selectedStore, duration);
+  }
+};
+```
+
+Click **Iniciar Transmisión** button. Requirements:
+- Playlist must contain at least one item
+- A store must be selected
+
+## Search and Filter
+
+Find specific items quickly:
+
+```tsx Dashboard.tsx:16-29
+const [searchTerm, setSearchTerm] = useState('');
+
+const filteredProducts = products.filter(p => 
+  p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+  p.category.toLowerCase().includes(searchTerm.toLowerCase())
+);
+
+const filteredAnnouncements = announcements.filter(a =>
+  a.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  a.message.toLowerCase().includes(searchTerm.toLowerCase())
+);
+```
+
+The search bar appears above the content grid in Products and Announcements tabs:
+
+```tsx Dashboard.tsx:196-206
+<div className="relative w-full md:w-96">
+  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+  <input 
+    type="text" 
+    placeholder={`Buscar en ${activeTab === 'products' ? 'productos' : 'avisos'}...`}
+    className="w-full pl-12 pr-4 py-3 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium"
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+  />
+</div>
+```
+
+## Data Flow to Display
+
+When you launch a display, the playlist data flows to Display Mode:
+
+```tsx Dashboard.tsx:10-11
+interface DashboardProps {
+  onStartDisplay: (items: DisplayItem[], storeId: string, duration: number) => void;
+}
+```
+
+The `DisplayItem` type references product/announcement IDs:
+
+```typescript types.ts:39-42
+export interface DisplayItem {
+  type: 'product' | 'announcement';
+  id: string;
+}
+```
+
+App.tsx resolves these IDs to full data objects:
+
+```tsx App.tsx:112-116
+const resolvedItems = (state.currentItems || []).map(item => {
+  if (item.type === 'product') return state.products.find(p => p.id === item.id);
+  return state.announcements.find(a => a.id === item.id);
+}).filter(Boolean) as (Product | Announcement)[];
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Optimal Playlist Length">
+    Create playlists with 5-15 items. Shorter playlists keep content fresh through repetition; longer playlists provide more variety but may bore viewers before cycling.
+  </Accordion>
+  
+  <Accordion title="Mix Content Types">
+    Alternate between products and announcements. A good ratio is 5-7 products for every 1-2 announcements.
+  </Accordion>
+  
+  <Accordion title="Strategic Sequencing">
+    - Start with an attention-grabbing promotion or announcement
+    - Place high-priority items in positions 2-3 (after initial attention)
+    - End with a strong call-to-action or store information
+  </Accordion>
+  
+  <Accordion title="Regular Updates">
+    Refresh your playlist daily or weekly. Stale content reduces effectiveness of digital signage.
+  </Accordion>
+  
+  <Accordion title="Test Before Launching">
+    Use Quick Launch to preview individual items. Check for typos, image quality, and timing before launching full playlists.
+  </Accordion>
+</AccordionGroup>
+
+## Related Features
+
+<CardGroup cols={3}>
+  <Card title="Product Management" icon="box" href="/features/product-management">
+    Create products for playlists
+  </Card>
+  <Card title="Announcements" icon="megaphone" href="/features/announcements">
+    Design custom text slides
+  </Card>
+  <Card title="Display Mode" icon="tv" href="/features/display-mode">
+    Launch your playlist
+  </Card>
+</CardGroup>

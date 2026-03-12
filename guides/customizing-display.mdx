@@ -1,0 +1,527 @@
+---
+title: Customizing Display
+description: Personalize colors, fonts, animations, and visual elements for your digital signage
+icon: palette
+---
+
+# Customizing Display
+
+PromoMaster Pro offers extensive customization options to match your brand identity and create engaging displays. This guide covers all customization features for both products and announcements.
+
+## Product Customization
+
+Products have several customizable elements that affect how they appear in displays.
+
+### Primary Theme Color
+
+The primary color creates the overall mood and brand association for each product ad.
+
+**How It Works**:
+- Sets the accent color throughout the ad display
+- Appears in background gradients and glows
+- Used for promotional badges
+- Colors the store location badge
+- Affects the progress bar and ticker elements
+
+**Setting Primary Color**:
+1. Navigate to **Gestión Total** → **Productos**
+2. Edit an existing product or create a new one
+3. Look for the **Color Primario** field (typically shows a color picker)
+4. Choose your brand or product-specific color
+5. Default is indigo (`#4f46e5`) if not specified
+
+**Color Selection Tips**:
+- Use colors that complement your product image
+- Consider color psychology (red = urgency, green = fresh, blue = trust)
+- Ensure sufficient contrast with white text
+- Test colors on actual display hardware for accuracy
+
+<Tip>
+  The AI-powered `suggestProductColor` function can analyze your product name or image and recommend a complementary color automatically.
+</Tip>
+
+### Product Images
+
+Images are the visual anchor of your product displays.
+
+**Image Sources**:
+
+PromoMaster Pro supports three methods:
+
+<Tabs>
+  <Tab title="URL Method">
+    **Best for**: Products with existing online images
+
+    1. Select **URL** tab in the image section
+    2. Paste the direct image URL
+    3. Image loads and displays immediately
+
+    **Supported Formats**: JPG, PNG, GIF, WebP
+    **Requirements**: Publicly accessible URL with HTTPS
+  </Tab>
+
+  <Tab title="Upload Method">
+    **Best for**: Local images and custom photography
+
+    1. Select **Subir** tab
+    2. Click **Seleccionar Archivo**
+    3. Choose image from your device
+    4. Image converts to base64 and embeds directly
+
+    **Advantages**:
+    - No external hosting needed
+    - Works offline
+    - Instant loading
+
+    **Considerations**:
+    - Increases database size
+    - Larger file sizes impact performance
+    - Recommend images under 500KB
+  </Tab>
+
+  <Tab title="AI Generation">
+    **Best for**: Quick prototyping or products without photos
+
+    1. Fill in the product name first
+    2. Select **AI** tab
+    3. Click **Generar con IA**
+    4. Wait for Gemini to generate a professional image
+
+    **Details**:
+    - Uses Gemini 2.5 Flash Image model
+    - Generates 1:1 aspect ratio images
+    - Professional studio photography style
+    - Clean background with cinematic lighting
+
+    **Requirements**: Valid Gemini API key with image generation enabled
+  </Tab>
+</Tabs>
+
+**Image Optimization**:
+- Recommended size: 1200x1200px or larger
+- Aspect ratio: Square (1:1) works best
+- Format: JPG for photos, PNG for graphics with transparency
+- Optimize before upload to reduce file size
+
+### Custom Slogans
+
+Slogans add persuasive marketing copy to your product ads.
+
+**Manual Entry**:
+1. In the product form, find **Slogan Publicitario**
+2. Type your marketing message (keep it under 50 characters)
+3. Example: "¡El sabor que te mereces!"
+
+**AI Generation**:
+1. Ensure product name and description are filled
+2. Click the sparkle (✨) icon next to the slogan field
+3. Gemini generates a compelling 5-word slogan
+4. Edit the generated text if needed
+
+**Slogan Display**:
+- Appears below the product name in large italic text
+- Colored with the primary theme color
+- Shown in quotes for emphasis
+- Optional - leave blank for price-focused displays
+
+**Best Practices**:
+- Keep it short and punchy (3-7 words ideal)
+- Use action words and emotional triggers
+- Match your brand voice
+- Test readability from a distance
+
+### Promotion Badges
+
+Promotion types add visual urgency to special offers.
+
+**Enable Promotion**:
+1. Check the **ES UNA OFERTA** checkbox in product form
+2. Select promotion type:
+
+**Promotion Types**:
+
+| Type | Label | Use Case |
+|------|-------|----------|
+| **General** | "¡OFERTA IMPERDIBLE!" | Standard sales and promotions |
+| **Día** | "¡OFERTA DEL DÍA!" | Daily specials, flash sales |
+| **Semana** | "¡OFERTA DE LA SEMANA!" | Weekly deals, longer promotions |
+
+**Badge Appearance**:
+- Top-left corner of product image
+- Large bold text in Bebas Neue font
+- Background color matches primary theme
+- Slight rotation (-3°) for dynamic look
+- Pulse animation for attention
+- White text with shadow for readability
+
+<Note>
+  Promotion badges automatically appear in both the management interface (small corner label) and fullscreen displays (large animated badge).
+</Note>
+
+## Announcement Customization
+
+Announcements (Avisos Libres) offer the most customization options for text-based content.
+
+### Typography Selection
+
+Choose from four professionally curated fonts:
+
+**Bebas Neue (font-bebas)** - "Impactante"
+- Ultra-bold, condensed sans-serif
+- Perfect for: Headlines, prices, urgent messages
+- Characteristics: High impact, attention-grabbing
+- Best use: Short, powerful statements
+
+**Inter (font-sans)** - "Limpio"
+- Modern, clean sans-serif
+- Perfect for: Body text, detailed information
+- Characteristics: High legibility, professional
+- Best use: Longer messages, announcements
+
+**Serif (font-serif)** - "Elegante"
+- Classic serif typeface
+- Perfect for: Premium products, formal notices
+- Characteristics: Traditional, sophisticated
+- Best use: Upscale messaging, elegance
+
+**Mono (font-mono)** - "Técnico"
+- Fixed-width monospace font
+- Perfect for: Technical info, modern aesthetic
+- Characteristics: Digital, contemporary
+- Best use: Tech products, modern brands
+
+**Changing Font**:
+1. In announcement editor, find **Tipografía** dropdown
+2. Select your preferred font
+3. Preview updates in real-time on the right
+4. Font applies to entire message text
+
+### Font Size Control
+
+Precise control over text size for optimal readability.
+
+**Size Range**: 20px - 200px
+
+**Using the Slider**:
+1. Locate **Tamaño Letra** control
+2. Drag slider or click track to adjust
+3. Current size displays in pixels
+4. Preview updates immediately
+
+**Size Guidelines**:
+- **20-40px**: Small details, footnotes
+- **40-64px**: Standard announcements, multi-line text
+- **64-100px**: Medium emphasis, short messages
+- **100-150px**: High impact, single lines
+- **150-200px**: Maximum impact, few words
+
+**Display Scaling**:
+- Editor preview shows 1/3 scale for manageable sizing
+- Full display renders at actual pixel size
+- Test on actual display hardware for real-world sizing
+
+<Warning>
+  Very large text (180px+) may overflow on smaller screens. Test your announcements at the actual display resolution.
+</Warning>
+
+### Color Customization
+
+Full control over background and text colors.
+
+**Background Color**:
+1. Click the **Fondo** color picker
+2. Select from color palette or enter HEX code
+3. Default: Dark slate (`#1e293b`)
+4. Covers entire display area with subtle transparency
+
+**Text Color**:
+1. Click the **Letra** color picker  
+2. Choose contrasting color for readability
+3. Default: White (`#ffffff`)
+4. Applies to all message text
+
+**Color Combination Tips**:
+- Ensure high contrast ratio (4.5:1 minimum for accessibility)
+- Dark backgrounds with light text work best for displays
+- Brand colors: Use your brand palette for consistency
+- Test colors under actual lighting conditions
+
+**Popular Combinations**:
+```
+Dark theme: #1e293b background + #ffffff text
+Brand colors: #2563eb background + #ffffff text  
+Warning: #dc2626 background + #ffffff text
+Success: #059669 background + #ffffff text
+Elegant: #000000 background + #fbbf24 text
+```
+
+### Text Alignment
+
+Control horizontal text positioning.
+
+**Alignment Options**:
+
+<CardGroup cols={3}>
+  <Card title="Left" icon="align-left">
+    Text aligns to left edge. Best for longer messages and paragraphs. Feels casual and readable.
+  </Card>
+  <Card title="Center" icon="align-center">
+    Text centers horizontally. Best for headlines and short messages. Professional and balanced.
+  </Card>
+  <Card title="Right" icon="align-right">
+    Text aligns to right edge. Best for stylistic emphasis. Modern and distinctive.
+  </Card>
+</CardGroup>
+
+**Changing Alignment**:
+1. Find the **Alineación** control (three button group)
+2. Click the alignment icon (left/center/right)
+3. Active alignment highlights in blue
+4. Preview updates immediately
+
+**Alignment by Content Type**:
+- **Center**: Single lines, headlines, short announcements
+- **Left**: Multi-line text, paragraphs, detailed info
+- **Right**: Stylistic choice for modern layouts
+
+### Animation Effects
+
+Subtle animations add polish to announcements.
+
+**Animation Toggle**:
+- Controlled by `hasAnimation` boolean property
+- Default: Enabled (`true`)
+- Currently applies a "shine effect" overlay
+
+**Effect Details**:
+- Subtle white/light overlay sweeps across the background
+- 20% opacity for gentle enhancement
+- Non-intrusive, adds premium feel
+- Works with any background color
+
+**Customization**:
+Currently animations are on/off only. The animation type (shine effect) is hardcoded in the display component.
+
+<Info>
+  Future versions may include animation type selection (fade, slide, bounce, etc.) and speed control.
+</Info>
+
+## Display Duration Settings
+
+Control how long each item appears on screen.
+
+**Global Duration Control**:
+- Located in Dashboard header (top right)
+- Shows a clock icon with "Segundos" label
+- Input field accepts any positive integer
+- Default: 5 seconds
+
+**How It Works**:
+1. Set duration value before launching display
+2. Duration applies to all items in the playlist equally
+3. Progress bar and auto-advance use this timing
+4. Value persists for future sessions
+
+**Duration Guidelines**:
+
+| Duration | Best For | Considerations |
+|----------|----------|----------------|
+| 2-3 sec | Simple products, prices only | Very fast, may be too quick |
+| 4-5 sec | Standard products with images | Good balance for most content |
+| 6-8 sec | Products with slogans, details | Comfortable reading pace |
+| 9-12 sec | Announcements, longer text | Ample time for message absorption |
+| 13+ sec | Detailed announcements | May feel slow for simple products |
+
+**Best Practices**:
+- Match duration to content complexity
+- Test with actual viewers for feedback
+- Longer isn't always better - respect viewer attention
+- Consider viewing distance and text amount
+- Adjust based on location traffic flow
+
+<Tip>
+  For mixed playlists (products + announcements), find a middle-ground duration that works for both. Alternatively, group similar content types together.
+</Tip>
+
+## Ticker Customization
+
+The bottom ticker displays dynamic, scrolling information.
+
+**Automatic Content**:
+Ticker messages are auto-generated based on displayed content:
+
+**For Products**:
+- Product name (uppercase)
+- "CALIDAD GARANTIZADA"
+- "DISPONIBLE AHORA" 
+- Store name
+- If promotion: "¡OFERTA LIMITADA!" and price
+- Special categories trigger additional messages
+
+**For Announcements**:
+- Announcement title
+- "AVISO IMPORTANTE"
+- Store name
+- "¡GRACIAS POR SU VISITA!"
+
+**Visual Design**:
+- Black background with 40% opacity
+- White text with theme color accents
+- Bebas Neue font for impact
+- Continuous marquee animation (35s loop)
+- Dots separate messages
+- Border lines top and bottom
+
+**Customization Limitations**:
+Ticker content is auto-generated and cannot be manually edited. Messages are derived from:
+- Product/announcement data
+- Store information  
+- Content type and properties
+
+## Real-Time Preview
+
+Take advantage of live preview features while customizing.
+
+### Announcement Preview
+
+The announcement editor includes a full-featured preview:
+
+**Location**: Right side of announcement form
+
+**Features**:
+- Real-time updates as you edit
+- Shows actual colors, fonts, and sizing (scaled to 1/3)
+- Background color transitions smoothly
+- Animation effects visible
+- Text alignment updates instantly
+
+**Using Preview**:
+1. Make any change in the form (color, text, font, etc.)
+2. Preview updates immediately without saving
+3. Iterate until satisfied
+4. Click "Guardar Aviso" when ready
+
+**Preview Accuracy**:
+- Preview scales content to fit editor
+- Actual display uses full specified dimensions
+- Colors and fonts render identically
+- Preview uses 1/3 of specified font size
+
+### Product Preview
+
+Product customization has hover-based preview:
+
+**Management View**:
+- Product list shows thumbnail images
+- Promotion badges display in corner
+- Primary color visible on price text
+- Edit to see form with all settings
+
+**Quick Preview**:
+- Hover over product card in Dashboard
+- Click play icon for full-screen preview
+- See exactly how product will display
+- Exit and adjust as needed
+
+## Advanced Customization Tips
+
+### Creating Brand Consistency
+
+**Color Palette**:
+1. Define 2-3 brand colors
+2. Use primary color for most products
+3. Use secondary color for special categories
+4. Maintain consistency across all locations
+
+**Typography Rules**:
+1. Choose one font for all announcements
+2. Use Bebas Neue for maximum impact
+3. Use Inter for professional, readable text
+4. Stick to your choice for brand recognition
+
+**Visual Hierarchy**:
+1. Use larger sizes for more important messages
+2. Reserve 150px+ for critical announcements
+3. Keep standard products at consistent sizes
+4. Let promotion badges provide visual variety
+
+### Seasonal Customization
+
+**Holiday Themes**:
+- Red/green backgrounds for Christmas
+- Orange/black for Halloween
+- Pastels for Spring
+- Update primary colors seasonally
+
+**Event-Specific**:
+- Sale events: Red backgrounds, urgency colors
+- Grand openings: Brand colors, large text
+- Closures: Muted colors, clear messaging
+
+### Accessibility Considerations
+
+**Color Contrast**:
+- Test with online contrast checkers
+- Aim for WCAG AA compliance (4.5:1 ratio)
+- Consider color blindness (avoid red/green only)
+
+**Text Sizing**:
+- Minimum 40px for critical information
+- Consider viewing distance (larger for far displays)
+- Test legibility with actual viewers
+
+**Font Selection**:
+- Sans-serif fonts (Bebas, Inter) most readable
+- Avoid decorative fonts for important info
+- High x-height fonts work better at distance
+
+## Troubleshooting Customization
+
+<AccordionGroup>
+  <Accordion title="Color changes don't appear in display">
+    Make sure you saved the product/announcement after changing colors.
+    
+    **Check**:
+    1. Edit the item in Gestión Total
+    2. Verify color values are set
+    3. Click save button
+    4. Rebuild playlist if using cached items
+  </Accordion>
+
+  <Accordion title="Text is too small/large in actual display">
+    Remember the preview scales differently than the full display.
+    
+    **Solution**:
+    - Announcement preview shows 1/3 scale
+    - Full display uses actual pixel size
+    - Test on real hardware
+    - Adjust size based on actual viewing
+  </Accordion>
+
+  <Accordion title="Images look blurry on display">
+    Low resolution images don't scale well to large displays.
+    
+    **Fix**:
+    - Use high-resolution images (1200px+ minimum)
+    - Avoid upscaling small images
+    - AI-generated images may have resolution limits
+    - Replace with higher quality source
+  </Accordion>
+
+  <Accordion title="Custom font not showing">
+    PromoMaster Pro uses a fixed set of fonts.
+    
+    **Options**:
+    - Choose from the four included fonts
+    - Custom fonts require modifying the CSS
+    - Contact support for custom font integration
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+Master these customization techniques:
+
+- [Best Practices](/guides/best-practices) - Learn professional design guidelines
+- [Creating Your First Ad](/guides/creating-first-ad) - Review the creation workflow
+- [Managing Multiple Stores](/guides/managing-multiple-stores) - Apply customization across locations

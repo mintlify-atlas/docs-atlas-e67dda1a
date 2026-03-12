@@ -1,0 +1,255 @@
+---
+title: 'Announcement'
+description: 'Customizable text-based announcement displays'
+---
+
+## Announcement Interface
+
+The `Announcement` interface represents a fully customizable text-based display for store announcements, notices, and special messages.
+
+```typescript
+export interface Announcement {
+  id: string;
+  title: string;
+  message: string;
+  fontSize: number; // in pixels
+  fontFamily: FontType;
+  backgroundColor: string;
+  textColor: string;
+  textAlign: 'left' | 'center' | 'right';
+  hasAnimation: boolean;
+}
+```
+
+## Properties
+
+<ResponseField name="id" type="string" required>
+  Unique identifier for the announcement. Auto-generated using `crypto.randomUUID()`.
+</ResponseField>
+
+<ResponseField name="title" type="string" required>
+  Internal title for management purposes (not displayed in ads).
+</ResponseField>
+
+<ResponseField name="message" type="string" required>
+  The actual announcement text displayed to viewers.
+</ResponseField>
+
+<ResponseField name="fontSize" type="number" required>
+  Font size in pixels. Typical range: 20-200px. Default: 64px.
+</ResponseField>
+
+<ResponseField name="fontFamily" type="FontType" required>
+  Typography style for the announcement. See [FontType](#fonttype) for options.
+</ResponseField>
+
+<ResponseField name="backgroundColor" type="string" required>
+  Hex color code for the announcement background (e.g., "#1e293b").
+</ResponseField>
+
+<ResponseField name="textColor" type="string" required>
+  Hex color code for the text (e.g., "#ffffff").
+</ResponseField>
+
+<ResponseField name="textAlign" type="'left' | 'center' | 'right'" required>
+  Text alignment within the display area.
+</ResponseField>
+
+<ResponseField name="hasAnimation" type="boolean" required>
+  Whether to apply a shine animation effect to the announcement.
+</ResponseField>
+
+## FontType
+
+Available typography styles:
+
+```typescript
+export type FontType = 'font-bebas' | 'font-sans' | 'font-serif' | 'font-mono';
+```
+
+<ResponseField name="font-bebas" type="literal">
+  Bold, impactful display font (Bebas Neue) - Best for attention-grabbing headlines
+</ResponseField>
+
+<ResponseField name="font-sans" type="literal">
+  Clean, modern sans-serif (Inter) - Professional and readable
+</ResponseField>
+
+<ResponseField name="font-serif" type="literal">
+  Elegant serif font - Traditional and sophisticated
+</ResponseField>
+
+<ResponseField name="font-mono" type="literal">
+  Technical monospace font - Modern and structured
+</ResponseField>
+
+## Usage Examples
+
+### Creating an Announcement
+
+```typescript
+const addAnnouncement = (ann: Omit<Announcement, 'id'>) => {
+  const newAnn = { ...ann, id: crypto.randomUUID() };
+  setState(prev => ({
+    ...prev,
+    announcements: [...prev.announcements, newAnn]
+  }));
+};
+
+// Usage
+addAnnouncement({
+  title: 'Horario de Verano',
+  message: 'Abierto de 8 AM a 10 PM todos los días',
+  fontSize: 72,
+  fontFamily: 'font-bebas',
+  backgroundColor: '#1e293b',
+  textColor: '#ffffff',
+  textAlign: 'center',
+  hasAnimation: true
+});
+```
+
+### Initial Announcement State
+
+```typescript
+const INITIAL_ANN_STATE: Omit<Announcement, 'id'> = {
+  title: '',
+  message: '',
+  fontSize: 64,
+  fontFamily: 'font-bebas',
+  backgroundColor: '#1e293b',
+  textColor: '#ffffff',
+  textAlign: 'center',
+  hasAnimation: true
+};
+```
+
+### Announcement Display
+
+```typescript
+const AnnouncementDisplay = ({ announcement }: { announcement: Announcement }) => (
+  <div
+    className="announcement-container"
+    style={{ backgroundColor: announcement.backgroundColor }}
+  >
+    {announcement.hasAnimation && (
+      <div className="shine-effect" />
+    )}
+    <div
+      className={announcement.fontFamily}
+      style={{
+        fontSize: `${announcement.fontSize}px`,
+        color: announcement.textColor,
+        textAlign: announcement.textAlign
+      }}
+    >
+      {announcement.message}
+    </div>
+  </div>
+);
+```
+
+### Live Preview
+
+```typescript
+// Real-time preview in the management interface
+<div
+  className="preview"
+  style={{ backgroundColor: annForm.backgroundColor }}
+>
+  <div
+    className={`${annForm.fontFamily} transition-all duration-300`}
+    style={{
+      fontSize: `${annForm.fontSize / 3}px`, // Scaled for preview
+      color: annForm.textColor,
+      textAlign: annForm.textAlign
+    }}
+  >
+    {annForm.message || 'Tu mensaje aparecerá aquí...'}
+  </div>
+</div>
+```
+
+### Font Family Selection
+
+```typescript
+<select
+  value={annForm.fontFamily}
+  onChange={(e) => setAnnForm({
+    ...annForm,
+    fontFamily: e.target.value as FontType
+  })}
+>
+  <option value="font-bebas">Impactante (Bebas)</option>
+  <option value="font-sans">Limpio (Inter)</option>
+  <option value="font-serif">Elegante (Serif)</option>
+  <option value="font-mono">Técnico (Mono)</option>
+</select>
+```
+
+### Text Alignment Controls
+
+```typescript
+{(['left', 'center', 'right'] as const).map(align => (
+  <button
+    key={align}
+    onClick={() => setAnnForm({ ...annForm, textAlign: align })}
+    className={annForm.textAlign === align ? 'active' : ''}
+  >
+    {align === 'left' ? <AlignLeft /> :
+     align === 'center' ? <AlignCenter /> :
+     <AlignRight />}
+  </button>
+))}
+```
+
+### Font Size Slider
+
+```typescript
+<input
+  type="range"
+  min="20"
+  max="200"
+  value={annForm.fontSize}
+  onChange={(e) => setAnnForm({
+    ...annForm,
+    fontSize: Number(e.target.value)
+  })}
+/>
+<span>{annForm.fontSize}px</span>
+```
+
+### Filtering Announcements
+
+```typescript
+const filteredAnnouncements = announcements.filter(a =>
+  a.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  a.message.toLowerCase().includes(searchTerm.toLowerCase())
+);
+```
+
+### Type Guard for Display Items
+
+```typescript
+const isAnnouncement = !('price' in item);
+if (isAnnouncement) {
+  const announcement = item as Announcement;
+  return <AnnouncementDisplay announcement={announcement} />;
+}
+```
+
+## Related Types
+
+- [DisplayItem](/api/types/app-state#displayitem) - References announcements in playlists
+- [AppState](/api/types/app-state) - Contains the announcements array
+- [Store](/api/types/store) - Announcements are displayed for stores
+
+## Notes
+
+- The `title` property is for internal organization only and not shown to viewers
+- Font size is specified in pixels and scaled appropriately for different displays
+- Colors must be valid hex codes (e.g., "#1e293b")
+- The shine animation effect is subtle and non-intrusive
+- Text alignment affects the entire message content
+- Font family choices map to specific CSS classes in the application
+- Announcements provide flexibility for store hours, special events, and general notices

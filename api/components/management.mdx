@@ -1,0 +1,483 @@
+---
+title: 'Management'
+description: 'CRUD interface for stores, products, and announcements with AI-powered features'
+icon: 'wrench'
+---
+
+## Overview
+
+The `Management` component provides a comprehensive admin interface for managing stores, products, and announcements. It features AI-powered slogan generation, image generation via Gemini API, and real-time announcement preview.
+
+## Props Interface
+
+```tsx
+interface ManagementProps {
+  stores: Store[];
+  products: Product[];
+  announcements: Announcement[];
+  onAddStore: (store: Omit<Store, 'id'>) => void;
+  onUpdateStore: (store: Store) => void;
+  onDeleteStore: (id: string) => void;
+  onAddProduct: (product: Omit<Product, 'id'>) => void;
+  onUpdateProduct: (product: Product) => void;
+  onDeleteProduct: (id: string) => void;
+  onAddAnnouncement: (ann: Omit<Announcement, 'id'>) => void;
+  onUpdateAnnouncement: (ann: Announcement) => void;
+  onDeleteAnnouncement: (id: string) => void;
+}
+```
+
+### Props
+
+<ParamField path="stores" type="Store[]" required>
+  Current array of store locations
+</ParamField>
+
+<ParamField path="products" type="Product[]" required>
+  Current array of products in the catalog
+</ParamField>
+
+<ParamField path="announcements" type="Announcement[]" required>
+  Current array of custom announcements
+</ParamField>
+
+<ParamField path="onAddStore" type="(store: Omit<Store, 'id'>) => void" required>
+  Callback to create a new store
+</ParamField>
+
+<ParamField path="onUpdateStore" type="(store: Store) => void" required>
+  Callback to update an existing store
+</ParamField>
+
+<ParamField path="onDeleteStore" type="(id: string) => void" required>
+  Callback to delete a store by ID
+</ParamField>
+
+<ParamField path="onAddProduct" type="(product: Omit<Product, 'id'>) => void" required>
+  Callback to create a new product
+</ParamField>
+
+<ParamField path="onUpdateProduct" type="(product: Product) => void" required>
+  Callback to update an existing product
+</ParamField>
+
+<ParamField path="onDeleteProduct" type="(id: string) => void" required>
+  Callback to delete a product by ID
+</ParamField>
+
+<ParamField path="onAddAnnouncement" type="(ann: Omit<Announcement, 'id'>) => void" required>
+  Callback to create a new announcement
+</ParamField>
+
+<ParamField path="onUpdateAnnouncement" type="(ann: Announcement) => void" required>
+  Callback to update an existing announcement
+</ParamField>
+
+<ParamField path="onDeleteAnnouncement" type="(id: string) => void" required>
+  Callback to delete an announcement by ID
+</ParamField>
+
+## Component State
+
+### Tab Navigation
+
+<ParamField path="activeTab" type="'products' | 'stores' | 'announcements'">
+  Currently active management section (default: 'products')
+</ParamField>
+
+### Edit Mode State
+
+<ParamField path="editingProductId" type="string | null">
+  ID of product being edited, or null if creating new
+</ParamField>
+
+<ParamField path="editingStoreId" type="string | null">
+  ID of store being edited, or null if creating new
+</ParamField>
+
+<ParamField path="editingAnnId" type="string | null">
+  ID of announcement being edited, or null if creating new
+</ParamField>
+
+### Form State
+
+<ParamField path="storeForm" type="Omit<Store, 'id'>">
+  Current store form data
+</ParamField>
+
+<ParamField path="productForm" type="Omit<Product, 'id'>">
+  Current product form data with initial values:
+  ```tsx
+  {
+    name: '',
+    description: '',
+    price: 0,
+    unit: 'unidad',
+    category: '',
+    isPromotion: false,
+    promotionType: 'general',
+    slogan: '',
+    imageUrl: '',
+    primaryColor: '#4f46e5'
+  }
+  ```
+</ParamField>
+
+<ParamField path="annForm" type="Omit<Announcement, 'id'>">
+  Current announcement form data with initial values:
+  ```tsx
+  {
+    title: '',
+    message: '',
+    fontSize: 64,
+    fontFamily: 'font-bebas',
+    backgroundColor: '#1e293b',
+    textColor: '#ffffff',
+    textAlign: 'center',
+    hasAnimation: true
+  }
+  ```
+</ParamField>
+
+### AI Generation State
+
+<ParamField path="isGeneratingSlogan" type="boolean">
+  Loading state for AI slogan generation
+</ParamField>
+
+<ParamField path="isGeneratingImage" type="boolean">
+  Loading state for AI image generation
+</ParamField>
+
+### Image Upload Mode
+
+<ParamField path="imgSourceMode" type="'url' | 'upload' | 'ai'">
+  Current method for product image selection
+</ParamField>
+
+<ParamField path="fileInputRef" type="RefObject<HTMLInputElement>">
+  Reference to hidden file input element
+</ParamField>
+
+## Key Methods
+
+### Product Management
+
+#### handleProductSubmit
+
+```tsx
+const handleProductSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (editingProductId) {
+    onUpdateProduct({ ...productForm, id: editingProductId });
+    setEditingProductId(null);
+  } else {
+    onAddProduct(productForm);
+  }
+  setProductForm(INITIAL_PRODUCT_STATE);
+  setImgSourceMode('url');
+};
+```
+
+Handles form submission for both creating and updating products.
+
+#### handleFileUpload
+
+```tsx
+const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setProductForm(prev => ({ ...prev, imageUrl: reader.result as string }));
+    };
+    reader.readAsDataURL(file);
+  }
+};
+```
+
+Converts uploaded image files to base64 data URLs for storage.
+
+#### handleGenerateImage
+
+```tsx
+const handleGenerateImage = async () => {
+  if (!productForm.name) {
+    alert("Introduce un nombre de producto para generar una imagen.");
+    return;
+  }
+  setIsGeneratingImage(true);
+  const imageUrl = await generateProductImage(productForm.name);
+  if (imageUrl) setProductForm(prev => ({ ...prev, imageUrl }));
+  setIsGeneratingImage(false);
+};
+```
+
+Generates product images using the Gemini API based on product name.
+
+### Announcement Management
+
+#### handleAnnSubmit
+
+```tsx
+const handleAnnSubmit = (e: React.FormEvent) => {
+  e.preventDefault();
+  if (editingAnnId) {
+    onUpdateAnnouncement({ ...annForm, id: editingAnnId });
+    setEditingAnnId(null);
+  } else {
+    onAddAnnouncement(annForm);
+  }
+  setAnnForm(INITIAL_ANN_STATE);
+};
+```
+
+#### handleEditAnn
+
+```tsx
+const handleEditAnn = (ann: Announcement) => {
+  setEditingAnnId(ann.id);
+  setAnnForm({ ...ann });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+```
+
+Loads announcement data into the form and scrolls to editor.
+
+### AI-Powered Features
+
+#### Slogan Generation
+
+```tsx
+<button type="button" onClick={async () => {
+  if(!productForm.name) return alert("Indica el nombre del producto.");
+  setIsGeneratingSlogan(true);
+  const s = await generateSlogan(productForm.name, productForm.description);
+  setProductForm(prev => ({ ...prev, slogan: s }));
+  setIsGeneratingSlogan(false);
+}}>
+  {isGeneratingSlogan ? <Loader2 className="animate-spin" /> : <Sparkles />}
+</button>
+```
+
+Generates marketing slogans using AI based on product name and description.
+
+## UI Sections
+
+### Products Tab
+
+**Layout**: 2-column grid (form + list)
+
+**Form Features**:
+- Text input for product name
+- Price and unit selection
+- Image source selector with 3 modes:
+  - **URL**: Direct image link input
+  - **Upload**: File picker for local images
+  - **AI**: Gemini-powered image generation
+- Slogan textarea with AI generation button
+- Promotion toggle with type selector (general/día/semana)
+- Color picker for theme color
+
+**List Features**:
+- Product cards with thumbnail, name, price
+- Promotion badge overlay
+- Edit and delete actions
+- Empty state message
+
+### Announcements Tab
+
+**Layout**: 2-column grid (editor + preview/list)
+
+**Editor Form**:
+- Title input (internal reference)
+- Message textarea (display content)
+- Typography selector:
+  - Bebas (Impactante)
+  - Sans (Limpio)
+  - Serif (Elegante)
+  - Mono (Técnico)
+- Font size slider (20-200px)
+- Text alignment buttons (left/center/right)
+- Background color picker
+- Text color picker
+
+**Real-Time Preview**:
+```tsx
+<div 
+  className={`${annForm.fontFamily} transition-all`}
+  style={{ 
+    fontSize: `${annForm.fontSize / 3}px`, 
+    color: annForm.textColor, 
+    textAlign: annForm.textAlign,
+    backgroundColor: annForm.backgroundColor
+  }}
+>
+  {annForm.message || 'Tu mensaje aparecerá aquí...'}
+</div>
+```
+
+**List Section**:
+- Saved announcements with color-coded icons
+- Font metadata display
+- Edit and delete actions
+
+### Stores Tab
+
+**Layout**: 1/3 form + 2/3 list
+
+**Form Fields**:
+- Store name (text input)
+- Address (text input)
+- Logo color (predefined or custom)
+
+**List Display**:
+- Store cards with colored icon showing first letter
+- Name and address display
+- Edit and delete actions
+
+## Product Form States
+
+### Image Source Modes
+
+#### URL Mode
+```tsx
+<input 
+  type="text" 
+  placeholder="https://ejemplo.com/foto.jpg" 
+  value={productForm.imageUrl} 
+  onChange={e => setProductForm({...productForm, imageUrl: e.target.value})}
+/>
+```
+
+#### Upload Mode
+```tsx
+<input 
+  type="file" 
+  ref={fileInputRef} 
+  onChange={handleFileUpload} 
+  accept="image/*" 
+  className="hidden" 
+/>
+<button onClick={() => fileInputRef.current?.click()}>
+  Seleccionar Archivo
+</button>
+```
+
+#### AI Mode
+```tsx
+<button 
+  onClick={handleGenerateImage} 
+  disabled={isGeneratingImage || !productForm.name}
+>
+  {isGeneratingImage ? <Loader2 className="animate-spin" /> : <Wand2 />}
+  Generar con IA
+</button>
+```
+
+### Promotion Configuration
+
+When `productForm.isPromotion` is true:
+
+```tsx
+<div className="animate-fadeIn">
+  <label>Tipo de Oferta</label>
+  <div className="flex gap-2">
+    {['general', 'dia', 'semana'].map(type => (
+      <button 
+        onClick={() => setProductForm({...productForm, promotionType: type})}
+        className={productForm.promotionType === type ? 'active' : ''}
+      >
+        {type === 'general' ? 'Oferta Simple' : 
+         type === 'dia' ? 'Oferta del Día' : 'Oferta Semanal'}
+      </button>
+    ))}
+  </div>
+</div>
+```
+
+## Unit Types
+
+Supported product units:
+- `unidad` - Individual units
+- `kg` - Kilograms
+- `g` - Grams
+- `litro` - Liters
+- `pack` - Package/Bundle
+
+## Font Types
+
+Supported announcement fonts:
+- `font-bebas` - Bold, impactful display font
+- `font-sans` - Clean, modern sans-serif
+- `font-serif` - Elegant serif font
+- `font-mono` - Technical monospace font
+
+## Usage Example
+
+```tsx
+import Management from './components/Management';
+import { useState } from 'react';
+
+function App() {
+  const [stores, setStores] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
+
+  const addStore = (store) => {
+    const newStore = { ...store, id: crypto.randomUUID() };
+    setStores([...stores, newStore]);
+  };
+
+  const updateStore = (updatedStore) => {
+    setStores(stores.map(s => 
+      s.id === updatedStore.id ? updatedStore : s
+    ));
+  };
+
+  const deleteStore = (id) => {
+    setStores(stores.filter(s => s.id !== id));
+  };
+
+  // Similar handlers for products and announcements...
+
+  return (
+    <Management
+      stores={stores}
+      products={products}
+      announcements={announcements}
+      onAddStore={addStore}
+      onUpdateStore={updateStore}
+      onDeleteStore={deleteStore}
+      onAddProduct={addProduct}
+      onUpdateProduct={updateProduct}
+      onDeleteProduct={deleteProduct}
+      onAddAnnouncement={addAnnouncement}
+      onUpdateAnnouncement={updateAnnouncement}
+      onDeleteAnnouncement={deleteAnnouncement}
+    />
+  );
+}
+```
+
+## Service Dependencies
+
+The component imports AI services:
+
+```tsx
+import { generateSlogan, generateProductImage } from '../services/geminiService';
+```
+
+- `generateSlogan(name: string, description: string): Promise<string>`
+- `generateProductImage(productName: string): Promise<string | null>`
+
+## Type Dependencies
+
+- `Store` - from `../types`
+- `Product` - from `../types`
+- `UnitType` - from `../types`
+- `PromotionType` - from `../types`
+- `Announcement` - from `../types`
+- `FontType` - from `../types`
+
+See the [Types Reference](/api/types) for complete type definitions.

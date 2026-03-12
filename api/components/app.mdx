@@ -1,0 +1,263 @@
+---
+title: 'App'
+description: 'Root application component managing state, routing, and notifications'
+icon: 'app-window'
+---
+
+## Overview
+
+The `App` component is the root component of PromoMaster Pro. It manages application state, localStorage persistence, navigation between views, and CRUD operations for stores, products, and announcements.
+
+## Component Signature
+
+```tsx
+const App: React.FC = () => { ... }
+```
+
+The App component has no props and is self-contained.
+
+## State Management
+
+### AppState Interface
+
+The component manages a comprehensive application state:
+
+<ParamField path="stores" type="Store[]">
+  Array of store/branch locations
+</ParamField>
+
+<ParamField path="products" type="Product[]">
+  Array of products in the catalog
+</ParamField>
+
+<ParamField path="announcements" type="Announcement[]">
+  Array of custom announcements
+</ParamField>
+
+<ParamField path="currentStoreId" type="string" optional>
+  ID of the store currently displaying content
+</ParamField>
+
+<ParamField path="currentItems" type="DisplayItem[]" optional>
+  Items currently being displayed in the ad view
+</ParamField>
+
+<ParamField path="displayDuration" type="number" optional>
+  Duration in seconds for each slide (default: 5)
+</ParamField>
+
+<ParamField path="view" type="'dashboard' | 'display' | 'management'">
+  Current active view of the application
+</ParamField>
+
+### Notification System
+
+```tsx
+interface Notification {
+  id: string;
+  message: string;
+  type: 'success' | 'info' | 'error';
+}
+```
+
+The component maintains a separate notification state for toast messages with auto-dismiss after 4 seconds.
+
+## Key Features
+
+### LocalStorage Persistence
+
+The application automatically persists state to localStorage under the key `promomaster_data_v2`:
+
+- State is loaded on mount from localStorage
+- State is saved to localStorage on every update
+- Handles parse errors gracefully with fallback to default state
+
+### CRUD Operations
+
+The App component provides complete CRUD functionality:
+
+#### Store Operations
+
+<ParamField path="addStore" type="(store: Omit<Store, 'id'>) => void">
+  Creates a new store with auto-generated UUID
+</ParamField>
+
+<ParamField path="updateStore" type="(updatedStore: Store) => void">
+  Updates an existing store by ID
+</ParamField>
+
+<ParamField path="deleteStore" type="(id: string) => void">
+  Removes a store from the collection
+</ParamField>
+
+#### Product Operations
+
+<ParamField path="addProduct" type="(product: Omit<Product, 'id'>) => void">
+  Creates a new product with auto-generated UUID
+</ParamField>
+
+<ParamField path="updateProduct" type="(updatedProduct: Product) => void">
+  Updates an existing product by ID
+</ParamField>
+
+<ParamField path="deleteProduct" type="(id: string) => void">
+  Removes a product from the catalog
+</ParamField>
+
+#### Announcement Operations
+
+<ParamField path="addAnnouncement" type="(ann: Omit<Announcement, 'id'>) => void">
+  Creates a new announcement with auto-generated UUID
+</ParamField>
+
+<ParamField path="updateAnnouncement" type="(ann: Announcement) => void">
+  Updates an existing announcement by ID
+</ParamField>
+
+<ParamField path="deleteAnnouncement" type="(id: string) => void">
+  Removes an announcement from the collection
+</ParamField>
+
+### Display Control
+
+<ParamField path="startDisplay" type="(items: DisplayItem[], storeId: string, duration: number) => void">
+  Initiates the fullscreen ad display mode with specified items, store, and duration
+</ParamField>
+
+<ParamField path="setView" type="(view: AppState['view']) => void">
+  Changes the current application view
+</ParamField>
+
+## View Routing Logic
+
+The App component conditionally renders views based on `state.view`:
+
+### Display View
+
+When `state.view === 'display'`, the component:
+
+1. Resolves `DisplayItem[]` references to actual Product/Announcement objects
+2. Validates that items and store exist
+3. Renders the `AdDisplay` component in fullscreen
+4. Falls back to dashboard if validation fails
+
+```tsx
+if (state.view === 'display') {
+  return (
+    <AdDisplay 
+      items={resolvedItems} 
+      store={store} 
+      duration={state.displayDuration || 5}
+      onExit={() => setView('dashboard')} 
+    />
+  );
+}
+```
+
+### Dashboard View
+
+```tsx
+<Dashboard 
+  products={state.products} 
+  announcements={state.announcements}
+  stores={state.stores} 
+  onStartDisplay={startDisplay}
+  defaultDuration={state.displayDuration || 5}
+/>
+```
+
+### Management View
+
+```tsx
+<Management 
+  stores={state.stores}
+  products={state.products}
+  announcements={state.announcements}
+  onAddStore={addStore}
+  onUpdateStore={updateStore}
+  onDeleteStore={deleteStore}
+  onAddProduct={addProduct}
+  onUpdateProduct={updateProduct}
+  onDeleteProduct={deleteProduct}
+  onAddAnnouncement={addAnnouncement}
+  onUpdateAnnouncement={updateAnnouncement}
+  onDeleteAnnouncement={deleteAnnouncement}
+/>
+```
+
+## Notification Management
+
+The `addNotification` callback creates toast notifications:
+
+```tsx
+const addNotification = useCallback(
+  (message: string, type: Notification['type'] = 'success') => {
+    const id = crypto.randomUUID();
+    setNotifications(prev => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setNotifications(prev => prev.filter(n => n.id !== id));
+    }, 4000);
+  },
+  []
+);
+```
+
+- Auto-generates unique IDs using `crypto.randomUUID()`
+- Auto-dismisses after 4 seconds
+- Supports success, info, and error types
+- Renders with animated slide-in from right
+
+## Navigation UI
+
+The App component includes a persistent sidebar navigation:
+
+- **Dashboard**: Main control panel with playlist builder
+- **Management**: CRUD interface for stores, products, and announcements
+
+Navigation state is managed through the `view` state property.
+
+## Default State
+
+If localStorage is empty or corrupted, the app initializes with:
+
+```tsx
+{
+  stores: [
+    { 
+      id: '1', 
+      name: 'Sucursal Central', 
+      address: 'Av. Libertador 1234', 
+      logoColor: 'bg-blue-600' 
+    }
+  ],
+  products: [],
+  announcements: [],
+  displayDuration: 5,
+  view: 'dashboard'
+}
+```
+
+## Usage Example
+
+```tsx
+import App from './App';
+import ReactDOM from 'react-dom/client';
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+```
+
+## Type Dependencies
+
+The App component imports and uses these types from `./types`:
+
+- `Store`
+- `Product`
+- `AppState`
+- `Announcement`
+- `DisplayItem`
+
+See the [Types Reference](/api/types) for complete type definitions.

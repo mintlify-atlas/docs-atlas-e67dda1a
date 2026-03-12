@@ -1,0 +1,335 @@
+---
+title: 'Gemini Service'
+description: 'AI-powered content generation service using Google GenAI'
+---
+
+## Overview
+
+The Gemini Service provides AI-powered content generation capabilities for PromoMaster Pro, including slogan generation, color suggestions, and product image generation. All functions use the Google GenAI API with the Gemini models.
+
+<Note>
+The service requires a valid `API_KEY` environment variable to be set. All functions include error handling with sensible fallback values.
+</Note>
+
+---
+
+## generateSlogan
+
+Generates a short, impactful marketing slogan for a product using AI.
+
+```typescript
+generateSlogan(productName: string, description: string): Promise<string>
+```
+
+### Parameters
+
+<ParamField path="productName" type="string" required>
+  The name of the product for which to generate a slogan
+</ParamField>
+
+<ParamField path="description" type="string" required>
+  A description of the product that provides context for slogan generation
+</ParamField>
+
+### Returns
+
+<ResponseField name="slogan" type="Promise<string>">
+  A short marketing slogan (maximum 5 words) in Spanish. Returns a default slogan if generation fails:
+  - Success: AI-generated slogan trimmed of whitespace
+  - Fallback: `"¡La mejor oferta para vos!"` (primary fallback)
+  - Error: `"¡Calidad garantizada!"` (error fallback)
+</ResponseField>
+
+### Implementation Details
+
+- **Model**: `gemini-3-flash-preview`
+- **Language**: Spanish (Argentina)
+- **Max Length**: 5 words
+- **Error Handling**: Logs errors to console and returns fallback text
+
+### Usage Example
+
+From `components/Management.tsx:213-219`:
+
+```typescript
+const handleGenerateSlogan = async () => {
+  if (!productForm.name) return alert("Indica el nombre del producto.");
+  setIsGeneratingSlogan(true);
+  const slogan = await generateSlogan(productForm.name, productForm.description);
+  setProductForm(prev => ({ ...prev, slogan }));
+  setIsGeneratingSlogan(false);
+};
+```
+
+### Error Handling
+
+```typescript
+try {
+  // AI generation
+  return response.text?.trim() || "¡La mejor oferta para vos!";
+} catch (error) {
+  console.error("Error generating slogan:", error);
+  return "¡Calidad garantizada!";
+}
+```
+
+---
+
+## suggestProductColor
+
+Suggests a vibrant HEX color code for a product based on its name and optional image data.
+
+```typescript
+suggestProductColor(productName: string, imageData?: string): Promise<string>
+```
+
+### Parameters
+
+<ParamField path="productName" type="string" required>
+  The name of the product for color suggestion
+</ParamField>
+
+<ParamField path="imageData" type="string" optional>
+  Optional base64-encoded image data in the format `data:image/[type];base64,[data]`. If provided, the AI will analyze the image along with the product name for color suggestions.
+</ParamField>
+
+### Returns
+
+<ResponseField name="hexColor" type="Promise<string>">
+  A HEX color code in the format `#RRGGBB`. Returns a default indigo color if generation fails or no valid HEX is found:
+  - Success: AI-suggested HEX color extracted via regex
+  - Fallback/Error: `"#4f46e5"` (indigo-600)
+</ResponseField>
+
+### Implementation Details
+
+- **Model**: `gemini-3-flash-preview`
+- **Input Types**: Text prompt + optional image data
+- **Output Format**: HEX color code
+- **Extraction**: Uses regex pattern `/#[0-9A-Fa-f]{6}/` to extract valid HEX codes
+- **Error Handling**: Logs errors to console and returns default color
+
+### Image Data Processing
+
+When `imageData` is provided:
+
+```typescript
+if (imageData && imageData.startsWith('data:')) {
+  const [mime, data] = imageData.split(';base64,');
+  parts.push({
+    inlineData: {
+      mimeType: mime.split(':')[1],
+      data: data
+    }
+  });
+}
+```
+
+### Usage Example
+
+```typescript
+// Without image
+const color = await suggestProductColor("Laptop Gaming");
+// Returns: "#4f46e5" or AI-suggested color
+
+// With image
+const imageData = "data:image/jpeg;base64,/9j/4AAQSkZJRg...";
+const color = await suggestProductColor("Laptop Gaming", imageData);
+// Returns: AI-suggested color based on product name and image analysis
+```
+
+### Error Handling
+
+```typescript
+try {
+  const hex = response.text?.trim().match(/#[0-9A-Fa-f]{6}/)?.[0];
+  return hex || "#4f46e5";
+} catch (error) {
+  console.error("Error suggesting color:", error);
+  return "#4f46e5";
+}
+```
+
+---
+
+## generateProductImage
+
+Generates a professional product image using AI image generation.
+
+```typescript
+generateProductImage(productName: string): Promise<string | null>
+```
+
+### Parameters
+
+<ParamField path="productName" type="string" required>
+  The name of the product for which to generate an image
+</ParamField>
+
+### Returns
+
+<ResponseField name="imageData" type="Promise<string | null>">
+  Base64-encoded image data in the format `data:[mimeType];base64,[imageData]`, or `null` if generation fails or no image is returned.
+</ResponseField>
+
+### Implementation Details
+
+- **Model**: `gemini-2.5-flash-image`
+- **Aspect Ratio**: 1:1 (square)
+- **Prompt Style**: Professional studio photography
+- **Quality**: 4K resolution, hyper-realistic
+- **Error Handling**: Logs errors to console and returns `null`
+
+### Prompt Template
+
+```typescript
+const prompt = `A professional, high-quality commercial studio photography of ${productName}. Clean background, cinematic lighting, 4k resolution, hyper-realistic, professional product placement.`;
+```
+
+### Image Extraction
+
+The function iterates through response parts to find inline image data:
+
+```typescript
+for (const part of response.candidates?.[0]?.content?.parts || []) {
+  if (part.inlineData) {
+    return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+  }
+}
+return null;
+```
+
+### Usage Example
+
+From `components/Management.tsx:88-97`:
+
+```typescript
+const handleGenerateImage = async () => {
+  if (!productForm.name) {
+    alert("Introduce un nombre de producto para generar una imagen.");
+    return;
+  }
+  setIsGeneratingImage(true);
+  const imageUrl = await generateProductImage(productForm.name);
+  if (imageUrl) setProductForm(prev => ({ ...prev, imageUrl }));
+  setIsGeneratingImage(false);
+};
+```
+
+### Error Handling
+
+```typescript
+try {
+  // Image generation and extraction
+  return imageDataUrl || null;
+} catch (error) {
+  console.error("Error generating image:", error);
+  return null;
+}
+```
+
+---
+
+## Configuration
+
+### Environment Variables
+
+<ParamField path="API_KEY" type="string" required>
+  Google GenAI API key for authenticating with the Gemini models
+</ParamField>
+
+### Initialization
+
+```typescript
+import { GoogleGenAI } from "@google/genai";
+
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+```
+
+---
+
+## Models Used
+
+| Function | Model | Purpose |
+|----------|-------|---------|
+| `generateSlogan` | `gemini-3-flash-preview` | Text generation |
+| `suggestProductColor` | `gemini-3-flash-preview` | Text + vision analysis |
+| `generateProductImage` | `gemini-2.5-flash-image` | Image generation |
+
+---
+
+## Best Practices
+
+<Tip>
+Always check for valid product names before calling these functions to avoid generating content for empty or invalid inputs.
+</Tip>
+
+<Warning>
+All functions include fallback values, but you should still handle the loading states in your UI to provide feedback to users during AI generation.
+</Warning>
+
+### Loading State Management
+
+```typescript
+const [isGenerating, setIsGenerating] = useState(false);
+
+const handleGenerate = async () => {
+  if (!productName) return;
+  
+  setIsGenerating(true);
+  try {
+    const result = await generateSlogan(productName, description);
+    // Use result
+  } finally {
+    setIsGenerating(false);
+  }
+};
+```
+
+### Error Recovery
+
+While all functions provide fallbacks, you may want to implement retry logic for critical operations:
+
+```typescript
+async function generateWithRetry(productName: string, maxRetries = 3) {
+  for (let i = 0; i < maxRetries; i++) {
+    const result = await generateProductImage(productName);
+    if (result) return result;
+    await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+  }
+  return null;
+}
+```
+
+---
+
+## Common Issues
+
+<AccordionGroup>
+  <Accordion title="Slogan returns default fallback">
+    **Causes:**
+    - Invalid API key
+    - Network connectivity issues
+    - Rate limiting from Google GenAI
+    
+    **Solution:** Check your API key configuration and network connectivity. The function will return a fallback slogan to maintain user experience.
+  </Accordion>
+
+  <Accordion title="Color suggestion always returns #4f46e5">
+    **Causes:**
+    - AI response doesn't contain a valid HEX code
+    - Image data is malformed
+    - API request failed
+    
+    **Solution:** Verify the image data format if provided. The regex `/[0-9A-Fa-f]{6}/` extracts HEX codes from the AI response.
+  </Accordion>
+
+  <Accordion title="Image generation returns null">
+    **Causes:**
+    - Model doesn't return image data
+    - Invalid product name
+    - API quota exceeded
+    
+    **Solution:** Implement fallback UI to allow manual image upload when AI generation fails.
+  </Accordion>
+</AccordionGroup>

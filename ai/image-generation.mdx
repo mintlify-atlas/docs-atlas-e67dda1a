@@ -1,0 +1,279 @@
+---
+title: 'AI Image Generation'
+description: 'Generate professional product photography using Google Gemini AI'
+icon: 'image'
+---
+
+## Overview
+
+The AI Image Generation feature uses Google's **gemini-2.5-flash-image** model to create professional, studio-quality product photography automatically. This eliminates the need for manual photo shoots during prototyping and testing phases.
+
+<Info>
+  Generated images are perfect for rapid prototyping and can be replaced with professional photography when ready for production.
+</Info>
+
+## Function Signature
+
+```typescript services/geminiService.ts
+export const generateProductImage = async (
+  productName: string
+): Promise<string | null>
+```
+
+### Parameters
+
+<ParamField path="productName" type="string" required>
+  The name of the product to generate an image for (e.g., "Samsung Galaxy S24", "Fresh Strawberries")
+</ParamField>
+
+### Returns
+
+<ResponseField name="return" type="string | null">
+  Returns a Base64-encoded data URI string with the generated image, or `null` if generation fails:
+  - **Success**: `"data:image/png;base64,iVBORw0KGgoAAAANS..."` (can be used directly in `<img>` tags)
+  - **Failure**: `null` (handle gracefully by using placeholder images)
+</ResponseField>
+
+## How It Works
+
+### 1. Prompt Construction
+
+The function builds a professional photography prompt optimized for commercial use:
+
+```typescript
+const prompt = `A professional, high-quality commercial studio photography of ${productName}. Clean background, cinematic lighting, 4k resolution, hyper-realistic, professional product placement.`;
+```
+
+<Tip>
+  The prompt is specifically engineered to produce clean, professional results suitable for retail digital signage.
+</Tip>
+
+### 2. API Call Configuration
+
+The image generation uses specific configuration for optimal output:
+
+```typescript
+const response = await ai.models.generateContent({
+  model: 'gemini-2.5-flash-image',
+  contents: {
+    parts: [{ text: prompt }]
+  },
+  config: {
+    imageConfig: {
+      aspectRatio: "1:1"
+    }
+  }
+});
+```
+
+<ParamField path="model" type="string">
+  Uses `gemini-2.5-flash-image` - optimized for fast, high-quality image generation
+</ParamField>
+
+<ParamField path="aspectRatio" type="string">
+  Set to `"1:1"` for square images, ideal for product displays and social media
+</ParamField>
+
+### 3. Response Processing
+
+The function extracts the image data from the API response:
+
+```typescript
+for (const part of response.candidates?.[0]?.content?.parts || []) {
+  if (part.inlineData) {
+    return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+  }
+}
+return null;
+```
+
+## Usage Example
+
+### In the Management Interface
+
+The image generation is integrated into the product creation form:
+
+```tsx components/Management.tsx
+const handleGenerateImage = async () => {
+  if (!productForm.name) {
+    alert("Introduce un nombre de producto para generar una imagen.");
+    return;
+  }
+  setIsGeneratingImage(true);
+  const imageUrl = await generateProductImage(productForm.name);
+  if (imageUrl) setProductForm(prev => ({ ...prev, imageUrl }));
+  setIsGeneratingImage(false);
+};
+```
+
+### UI Integration
+
+Users can select the AI generation mode from three image source options:
+
+```tsx
+<button 
+  type="button" 
+  onClick={() => setImgSourceMode('ai')} 
+  className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all ${
+    imgSourceMode === 'ai' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'
+  }`}
+>
+  <Sparkles size={14} /> AI
+</button>
+```
+
+## Image Specifications
+
+<CardGroup cols={2}>
+  <Card title="Aspect Ratio" icon="square">
+    **1:1 (Square)**
+    
+    Perfect for consistent product displays
+  </Card>
+  <Card title="Format" icon="file-image">
+    **Base64 Data URI**
+    
+    Ready for immediate display
+  </Card>
+  <Card title="Quality" icon="star">
+    **4K Resolution**
+    
+    Professional studio quality
+  </Card>
+  <Card title="Style" icon="paintbrush">
+    **Commercial Photography**
+    
+    Clean backgrounds, cinematic lighting
+  </Card>
+</CardGroup>
+
+## Error Handling
+
+The function includes robust error handling:
+
+```typescript
+try {
+  // ... image generation logic
+} catch (error) {
+  console.error("Error generating image:", error);
+  return null;
+}
+```
+
+<Warning>
+  Always handle the `null` return value in your UI:
+  ```typescript
+  const imageUrl = await generateProductImage(productName);
+  if (imageUrl) {
+    // Success - use the image
+    setProductForm(prev => ({ ...prev, imageUrl }));
+  } else {
+    // Failure - show error or use placeholder
+    alert("Failed to generate image. Please try again.");
+  }
+  ```
+</Warning>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Provide Descriptive Product Names" icon="text">
+    More specific product names yield better results:
+    - ✅ **Good**: "Red Apple Fuji Organic"
+    - ✅ **Good**: "Nike Air Max 270 Black"
+    - ❌ **Poor**: "Product 1"
+    - ❌ **Poor**: "Item"
+  </Accordion>
+
+  <Accordion title="Use Loading States" icon="spinner">
+    Always show visual feedback during generation:
+    ```tsx
+    {isGeneratingImage ? (
+      <Loader2 className="animate-spin" size={18} />
+    ) : (
+      <Wand2 size={18} />
+    )}
+    ```
+  </Accordion>
+
+  <Accordion title="Implement Fallbacks" icon="shield-check">
+    Have backup images ready in case generation fails:
+    ```typescript
+    const displayImage = product.imageUrl || 
+      `https://picsum.photos/seed/${product.id}/400`;
+    ```
+  </Accordion>
+
+  <Accordion title="Cache Generated Images" icon="database">
+    Store successful generations to avoid regenerating the same content:
+    ```typescript
+    // Images are stored in localStorage via productForm.imageUrl
+    // No need to regenerate on page refresh
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Performance Considerations
+
+<Info>
+  Generation typically takes **2-5 seconds** depending on API load and network conditions.
+</Info>
+
+### Optimization Tips
+
+1. **Disable the button during generation** to prevent duplicate requests
+2. **Show progress indicators** to improve perceived performance
+3. **Cache results** in localStorage to avoid unnecessary API calls
+4. **Use placeholder images** while waiting for generation
+
+## Limitations
+
+<Warning>
+  Be aware of these limitations:
+  
+  - Requires active internet connection
+  - Subject to Google Gemini API rate limits
+  - May not perfectly represent specialized or niche products
+  - Generated images are best for prototyping, not final production
+</Warning>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Function returns null" icon="circle-xmark">
+    **Possible causes:**
+    - API key not configured correctly
+    - Network connectivity issues
+    - Rate limit exceeded
+    - Invalid product name
+    
+    **Solution:** Check browser console for error messages and verify API key setup.
+  </Accordion>
+
+  <Accordion title="Image quality is poor" icon="image-slash">
+    **Possible causes:**
+    - Vague or generic product name
+    - API model limitations
+    
+    **Solution:** Provide more descriptive product names with brand, model, and key characteristics.
+  </Accordion>
+
+  <Accordion title="Generation is slow" icon="clock">
+    **Possible causes:**
+    - High API load
+    - Network latency
+    
+    **Solution:** This is normal. Ensure loading states are visible to users.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Setup API Key" icon="key" href="/ai/setup">
+    Configure your Gemini API credentials
+  </Card>
+  <Card title="Slogan Generation" icon="wand-magic-sparkles" href="/ai/slogan-generation">
+    Learn about AI-powered slogan creation
+  </Card>
+</CardGroup>
