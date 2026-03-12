@@ -1,0 +1,106 @@
+{
+  "projectType": "saas",
+  "projectName": "PromoMaster Pro",
+  "projectDescription": "Advanced digital signage solution for creating and managing custom advertisements with AI-powered content generation.",
+  "theme": "almond",
+  "primaryColor": "#4f46e5",
+  "lightColor": "#818cf8",
+  "darkColor": "#3730a3",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "installation"
+            ]
+          },
+          {
+            "group": "Core Features",
+            "pages": [
+              "features/store-management",
+              "features/product-management",
+              "features/announcements",
+              "features/playlist-creation",
+              "features/display-mode"
+            ]
+          },
+          {
+            "group": "AI Integration",
+            "pages": [
+              "ai/overview",
+              "ai/image-generation",
+              "ai/slogan-generation",
+              "ai/setup"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/creating-first-ad",
+              "guides/managing-multiple-stores",
+              "guides/customizing-display",
+              "guides/best-practices"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Components",
+            "pages": [
+              "api/components/app",
+              "api/components/dashboard",
+              "api/components/management",
+              "api/components/ad-display"
+            ]
+          },
+          {
+            "group": "Services",
+            "pages": [
+              "api/services/gemini-service"
+            ]
+          },
+          {
+            "group": "Types",
+            "pages": [
+              "api/types/store",
+              "api/types/product",
+              "api/types/announcement",
+              "api/types/app-state"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Multi-store management with customizable branding",
+    "AI-powered product image generation using Google Gemini",
+    "Automatic slogan creation with AI",
+    "Mix media playlist with drag-and-drop ordering",
+    "Full-screen digital signage display mode",
+    "Local storage persistence for offline capability",
+    "Dynamic ticker and animations",
+    "Responsive design for tablets and computers"
+  ],
+  "publicApiSurface": [
+    "App (Main application component)",
+    "Dashboard (Control panel for playlist management)",
+    "Management (CRUD interface for stores, products, announcements)",
+    "AdDisplay (Full-screen advertisement display)",
+    "generateSlogan() (AI-powered slogan generation)",
+    "generateProductImage() (AI-powered image generation)",
+    "suggestProductColor() (AI-powered color suggestion)",
+    "Store interface (Store data structure)",
+    "Product interface (Product data structure)",
+    "Announcement interface (Announcement data structure)",
+    "AppState interface (Application state structure)"
+  ]
+}
